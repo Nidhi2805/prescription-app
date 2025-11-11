@@ -8,6 +8,20 @@ button { margin: .25rem; padding:.4rem .6rem; }
 .medicine-row { display:flex; gap:.5rem; align-items:center; margin-bottom:.5rem; }
 table { width:100%; border-collapse: collapse; }
 table, th, td { border: 1px solid #ddd; padding:.4rem; }
+.autocomplete { position: relative; }
+.suggestions {
+  position: absolute;
+  top: 100%; left: 0; right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  list-style: none;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 10;
+}
+.suggestions li { padding: 0.3rem; cursor: pointer; }
+.suggestions li:hover { background: #f0f0f0; }
+
 @media print {
   /* hide navigation / buttons during print */
   header, button { display:none; }
