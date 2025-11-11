@@ -1,0 +1,14 @@
+body { font-family: Arial, sans-serif; padding: 1rem; }
+header { margin-bottom: 1rem; }
+button { margin: .25rem; padding:.4rem .6rem; }
+.card { border: 1px solid #ddd; padding:1rem; border-radius:6px; max-width:600px; }
+.doctor-grid { display:flex; gap:1rem; }
+.left { width: 40%; }
+.right { width: 60%; }
+.medicine-row { display:flex; gap:.5rem; align-items:center; margin-bottom:.5rem; }
+table { width:100%; border-collapse: collapse; }
+table, th, td { border: 1px solid #ddd; padding:.4rem; }
+@media print {
+  /* hide navigation / buttons during print */
+  header, button { display:none; }
+}
