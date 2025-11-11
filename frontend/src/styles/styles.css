@@ -8,19 +8,79 @@ button { margin: .25rem; padding:.4rem .6rem; }
 .medicine-row { display:flex; gap:.5rem; align-items:center; margin-bottom:.5rem; }
 table { width:100%; border-collapse: collapse; }
 table, th, td { border: 1px solid #ddd; padding:.4rem; }
-.autocomplete { position: relative; }
+.autocomplete {
+  position: relative;
+  width: 180px;
+}
+.autocomplete input {
+  width: 100%;
+  padding: 4px;
+}
+
 .suggestions {
   position: absolute;
-  top: 100%; left: 0; right: 0;
+  top: 100%;
+  left: 0;
+  right: 0;
   background: white;
-  border: 1px solid #ddd;
+  border: 1px solid #ccc;
   list-style: none;
+  margin: 0;
+  padding: 0;
+  z-index: 999;
   max-height: 150px;
   overflow-y: auto;
-  z-index: 10;
 }
-.suggestions li { padding: 0.3rem; cursor: pointer; }
-.suggestions li:hover { background: #f0f0f0; }
+.suggestions li {
+  padding: 6px;
+  cursor: pointer;
+}
+.suggestions li:hover {
+  background: #f3f3f3;
+}
+.medicine-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.medicine-row input {
+  width: 100px;
+  padding: 4px;
+}
+
+.qty-label {
+  min-width: 80px;
+  font-weight: bold;
+  color: #333;
+}
+
+.summary table {
+  margin-top: 0.6rem;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.summary th, .summary td {
+  border: 1px solid #ddd;
+  padding: 6px;
+  text-align: center;
+}
+
+button {
+  padding: 6px 10px;
+  margin: 4px;
+  border: none;
+  background-color: #0078d4;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #005fa3;
+}
 
 @media print {
   /* hide navigation / buttons during print */
