@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import MedicineAutocomplete from '../components/MedicineAutocomplete'; // 🔹 Fixed autocomplete
+import MedicineAutocomplete from '../components/MedicineAutocomplete';
 
 // ---------------- MedicineRow Component ----------------
 function MedicineRow({ idx, med, onChange, onRemove }) {
@@ -20,7 +20,6 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
     const qty = dosesPerDay * (med.days || 0);
     setTotalQty(qty);
     onChange(idx, { ...med, totalQuantity: qty });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [med.times, med.days]);
 
   return (
@@ -48,7 +47,7 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
 
 // ---------------- PrescriptionView Main Component ----------------
 export default function PrescriptionView({ patient, onSubmitPrescription }) {
-  const [doctorName, setDoctorName] = useState('');
+  const doctorName = patient.assignedDoctor;
   const [notes, setNotes] = useState('');
   const [medicines, setMedicines] = useState([
     { name: '', times: '1-0-0', days: 1, totalQuantity: 0 }
@@ -89,7 +88,6 @@ export default function PrescriptionView({ patient, onSubmitPrescription }) {
     alert('✅ Prescription saved successfully!');
   }
 
-  // 🖨️ Print only the current prescription section
   function printPrescription() {
     const printContents = document.getElementById('printable-prescription').innerHTML;
     const printWindow = window.open('', '_blank');
@@ -98,11 +96,10 @@ export default function PrescriptionView({ patient, onSubmitPrescription }) {
         <head>
           <title>Prescription - ${patient.name}</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; color: #000; }
+            body { font-family: Arial, sans-serif; padding: 20px; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #555; padding: 6px; text-align: center; }
-            h1, h2, h3 { text-align: center; }
-            .footer { margin-top: 10px; font-size: 0.9em; }
+            h1 { text-align: center; }
           </style>
         </head>
         <body>
@@ -117,23 +114,24 @@ export default function PrescriptionView({ patient, onSubmitPrescription }) {
   return (
     <div>
       <h2>Patient: {patient.name} — {patient.patientId}</h2>
-      <p>
-        Age: {patient.age} | Weight: {patient.weight} | Height: {patient.height}
+      <p>Age: {patient.age} | Weight: {patient.weight} | Height: {patient.height}</p>
+
+      {/* 🔴 ALLERGY WARNING */}
+      <p style={{ color: 'red', fontWeight: 'bold' }}>
+        ⚠ Allergies: {patient.allergies || 'None'}
       </p>
+
       <p>Case History: {patient.caseHistory}</p>
 
       {/* ---------- Prescription Entry Section ---------- */}
-      {/* 🔹 Added printable wrapper */}
       <div className="prescribe-box" id="printable-prescription">
         <h1>Doctor Prescription</h1>
-        <p><strong>Doctor:</strong> {doctorName || 'Dr. __________'}</p>
+        <p><strong>Doctor:</strong> {doctorName}</p>
         <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
+        <p><strong>Allergies:</strong> {patient.allergies || 'None'}</p>
 
-        <input
-          placeholder="Doctor name"
-          value={doctorName}
-          onChange={e => setDoctorName(e.target.value)}
-        />
+        <input value={doctorName} disabled />
+
         <textarea
           placeholder="Notes"
           value={notes}
@@ -153,7 +151,6 @@ export default function PrescriptionView({ patient, onSubmitPrescription }) {
 
         <button onClick={addMed}>➕ Add medicine</button>
 
-        {/* ---------- Summary Table ---------- */}
         <div className="summary">
           <h4>Prescription Summary</h4>
           <table>
@@ -177,63 +174,18 @@ export default function PrescriptionView({ patient, onSubmitPrescription }) {
             </tbody>
           </table>
 
-          <p>
-            <strong>Total Medicines:</strong> {computeTotalMedicines()}
-          </p>
-          <p>
-            <strong>Total Tablets (All):</strong> {computeTotalQuantities()}
-          </p>
+          <p><strong>Total Medicines:</strong> {computeTotalMedicines()}</p>
+          <p><strong>Total Tablets:</strong> {computeTotalQuantities()}</p>
 
           {notes && (
-            <div className="footer">
-              <strong>Notes:</strong> {notes}
-            </div>
+            <p><strong>Notes:</strong> {notes}</p>
           )}
         </div>
       </div>
 
-      {/* ---------- Action Buttons (won’t print) ---------- */}
       <div className="actions">
         <button onClick={submit}>💾 Save Prescription</button>
         <button onClick={printPrescription}>🖨️ Print Prescription</button>
-      </div>
-
-      {/* ---------- Previous Prescriptions ---------- */}
-      <div className="non-print">
-        <h3>Previous Prescriptions</h3>
-        {patient.prescriptions && patient.prescriptions.length > 0 ? (
-          patient.prescriptions.map(p => (
-            <div key={p.prescriptionId} className="rx-card">
-              <h4>
-                {p.prescriptionId} — {new Date(p.date).toLocaleString()}
-              </h4>
-              <p>Doctor: {p.doctorName}</p>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Medicine</th>
-                    <th>Times</th>
-                    <th>Days</th>
-                    <th>Total Qty</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {p.medicines.map((m, i) => (
-                    <tr key={i}>
-                      <td>{m.name}</td>
-                      <td>{m.times}</td>
-                      <td>{m.days}</td>
-                      <td>{m.totalQuantity}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <p>Notes: {p.notes}</p>
-            </div>
-          ))
-        ) : (
-          <p>No previous prescriptions found.</p>
-        )}
       </div>
     </div>
   );

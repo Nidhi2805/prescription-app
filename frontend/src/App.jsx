@@ -1,18 +1,24 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
+
 import ReceptionForm from './pages/ReceptionForm';
 import DoctorDashboard from './pages/DoctorDashboard';
+import SearchPatient from './pages/SearchPatient';
 
 export default function App() {
-  const [view, setView] = useState('reception'); // 'reception' or 'doctor'
   return (
     <div className="app">
       <header>
-        <button onClick={() => setView('reception')}>Reception</button>
-        <button onClick={() => setView('doctor')}>Doctor PC</button>
+        <Link to="/"><button>Reception</button></Link>
+        <Link to="/doctor"><button>Doctor PC</button></Link>
       </header>
-      <main>
-        {view === 'reception' ? <ReceptionForm /> : <DoctorDashboard />}
-      </main>
+
+      <Routes>
+        <Route path="/" element={<ReceptionForm />} />
+        <Route path="/doctor" element={<DoctorDashboard />} />
+        <Route path="/search-patient" element={<SearchPatient />} />
+        <Route path="/doctor/:patientId" element={<DoctorDashboard />} />
+      </Routes>
     </div>
   );
 }

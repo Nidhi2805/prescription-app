@@ -23,8 +23,30 @@ const PatientSchema = new mongoose.Schema({
   height: Number,
   contact: String,
   caseHistory: String,
+
+  assignedDoctor: {
+    type: String,
+    required: true
+  },
+
+  allergies: {
+    type: String,   // example: "Penicillin, Dust, Peanuts"
+    default: 'None'
+  },
+
+  dob: {
+    type: Date,
+    required: true
+  },
+  
+  address: {
+    type: String,
+    required: true
+  },
+  
   createdAt: { type: Date, default: Date.now },
   prescriptions: [PrescriptionSchema]
 });
+
 
 module.exports = mongoose.model('Patient', PatientSchema);

@@ -1,88 +1,514 @@
-body { font-family: Arial, sans-serif; padding: 1rem; }
-header { margin-bottom: 1rem; }
-button { margin: .25rem; padding:.4rem .6rem; }
-.card { border: 1px solid #ddd; padding:1rem; border-radius:6px; max-width:600px; }
-.doctor-grid { display:flex; gap:1rem; }
-.left { width: 40%; }
-.right { width: 60%; }
-.medicine-row { display:flex; gap:.5rem; align-items:center; margin-bottom:.5rem; }
-table { width:100%; border-collapse: collapse; }
-table, th, td { border: 1px solid #ddd; padding:.4rem; }
+/* ========== Global Styles ========== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 2rem;
+  color: #333;
+}
+
+header {
+  background: white;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+header h1 {
+  color: #667eea;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* ========== Buttons ========== */
+button {
+  padding: 0.7rem 1.2rem;
+  margin: 0.4rem;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* ========== Cards ========== */
+.card {
+  background: white;
+  border: none;
+  padding: 2rem;
+  border-radius: 16px;
+  max-width: 700px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  margin: 0 auto;
+}
+
+.card h2 {
+  color: #667eea;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.card input,
+.card textarea {
+  width: 100%;
+  padding: 0.9rem;
+  margin: 0.6rem 0;
+  border: 2px solid #e0e7ff;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #f9fafb;
+}
+
+.card input:focus,
+.card textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.card textarea {
+  min-height: 100px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.card p {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f0fdf4;
+  border-left: 4px solid #22c55e;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+/* ========== Doctor Dashboard Grid ========== */
+.doctor-grid {
+  display: flex;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.left {
+  width: 35%;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  height: fit-content;
+}
+
+.right {
+  width: 65%;
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.left h3 {
+  color: #667eea;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* ========== Tables ========== */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 1rem;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+th {
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  padding: 1rem;
+  text-align: left;
+}
+
+td {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+}
+
+tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ========== Medicine Row ========== */
+.medicine-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.medicine-row:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.medicine-row input {
+  padding: 0.7rem;
+  border: 2px solid #e0e7ff;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.medicine-row input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.qty-label {
+  min-width: 100px;
+  font-weight: 700;
+  color: #22c55e;
+  font-size: 0.95rem;
+  padding: 0.5rem;
+  background: #f0fdf4;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.medicine-row button {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  margin: 0;
+}
+
+.medicine-row button:hover {
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* ========== Autocomplete ========== */
 .autocomplete {
   position: relative;
-  width: 180px;
+  width: 220px;
 }
+
 .autocomplete input {
   width: 100%;
-  padding: 4px;
+  padding: 0.7rem;
+  border: 2px solid #e0e7ff;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.autocomplete input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .suggestions {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   left: 0;
   right: 0;
   background: white;
-  border: 1px solid #ccc;
+  border: 2px solid #667eea;
+  border-radius: 8px;
   list-style: none;
   margin: 0;
   padding: 0;
   z-index: 999;
-  max-height: 150px;
+  max-height: 200px;
   overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
+
 .suggestions li {
-  padding: 6px;
+  padding: 0.9rem;
   cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f3f4f6;
 }
+
+.suggestions li:last-child {
+  border-bottom: none;
+}
+
 .suggestions li:hover {
-  background: #f3f3f3;
-}
-.medicine-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.4rem;
+  background: #f0f3ff;
+  color: #667eea;
+  font-weight: 600;
 }
 
-.medicine-row input {
-  width: 100px;
-  padding: 4px;
+/* ========== Prescription Section ========== */
+.prescribe-box {
+  background: #f9fafb;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  margin-bottom: 2rem;
 }
 
-.qty-label {
-  min-width: 80px;
-  font-weight: bold;
-  color: #333;
+.prescribe-box h1 {
+  color: #667eea;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.prescribe-box > p {
+  margin: 0.5rem 0;
+  font-size: 1.05rem;
+  color: #4b5563;
+}
+
+.prescribe-box > input,
+.prescribe-box > textarea {
+  width: 100%;
+  padding: 0.9rem;
+  margin: 0.8rem 0;
+  border: 2px solid #e0e7ff;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.prescribe-box > input:focus,
+.prescribe-box > textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.prescribe-box h4 {
+  margin: 1.5rem 0 1rem 0;
+  color: #374151;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+/* ========== Summary Section ========== */
+.summary {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.summary h4 {
+  color: #667eea;
+  margin-bottom: 1rem;
+  font-size: 1.4rem;
+  font-weight: 700;
 }
 
 .summary table {
-  margin-top: 0.6rem;
-  width: 100%;
-  border-collapse: collapse;
+  margin-top: 1rem;
 }
 
-.summary th, .summary td {
-  border: 1px solid #ddd;
-  padding: 6px;
+.summary th,
+.summary td {
   text-align: center;
+  padding: 0.8rem;
 }
 
-button {
-  padding: 6px 10px;
-  margin: 4px;
-  border: none;
-  background-color: #0078d4;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
+.summary > p {
+  margin-top: 1rem;
+  padding: 0.8rem;
+  background: #f0f3ff;
+  border-radius: 6px;
+  font-weight: 600;
+  color: #667eea;
+  font-size: 1.05rem;
 }
 
-button:hover {
-  background-color: #005fa3;
+.summary .footer {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #fffbeb;
+  border-left: 4px solid #f59e0b;
+  border-radius: 6px;
 }
 
+/* ========== Actions ========== */
+.actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+.actions button {
+  padding: 1rem 2rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.actions button:first-child {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.actions button:first-child:hover {
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+/* ========== Previous Prescriptions ========== */
+.non-print h3 {
+  color: #667eea;
+  margin: 2rem 0 1rem 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.rx-card {
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.rx-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+}
+
+.rx-card h4 {
+  color: #374151;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.rx-card > p {
+  margin: 0.5rem 0;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* ========== Patient Info Header ========== */
+.right h2 {
+  color: #667eea;
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.right > p {
+  color: #6b7280;
+  margin: 0.5rem 0;
+  font-size: 1.05rem;
+}
+
+/* ========== Responsive Design ========== */
+@media (max-width: 1024px) {
+  .doctor-grid {
+    flex-direction: column;
+  }
+  
+  .left, .right {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    padding: 1rem;
+  }
+  
+  .medicine-row {
+    flex-wrap: wrap;
+  }
+  
+  .autocomplete {
+    width: 100%;
+  }
+  
+  .actions {
+    flex-direction: column;
+  }
+  
+  .actions button {
+    width: 100%;
+  }
+}
+
+/* ========== Print Styles ========== */
 @media print {
-  /* hide navigation / buttons during print */
-  header, button { display:none; }
+  body {
+    background: white;
+    padding: 0;
+  }
+  
+  header,
+  button,
+  .actions,
+  .non-print {
+    display: none !important;
+  }
+  
+  .prescribe-box {
+    border: 2px solid #000;
+    padding: 2rem;
+  }
+  
+  .prescribe-box input,
+  .prescribe-box textarea {
+    border: none;
+    background: transparent;
+  }
 }
