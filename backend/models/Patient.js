@@ -16,7 +16,7 @@ const PrescriptionSchema = new mongoose.Schema({
 });
 
 const PatientSchema = new mongoose.Schema({
-  patientId: { type: String, required: true, unique: true },
+  patientId: { type: Number, required: true, unique: true },
   name: { type: String, required: true },
   age: Number,
   weight: Number,

@@ -70,10 +70,6 @@ export default function PrescriptionView({ patient, onSubmitPrescription }) {
     ]);
   }
 
-  const computeTotalMedicines = () => medicines.length;
-  const computeTotalQuantities = () =>
-    medicines.reduce((sum, m) => sum + (m.totalQuantity || 0), 0);
-
   async function submit() {
     if (medicines.length === 0) {
       alert('Add at least one medicine');
@@ -89,7 +85,8 @@ export default function PrescriptionView({ patient, onSubmitPrescription }) {
   }
 
   function printPrescription() {
-    const printContents = document.getElementById('printable-prescription').innerHTML;
+    const printContents =
+      document.getElementById('printable-prescription').innerHTML;
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
       <html>
@@ -99,7 +96,7 @@ export default function PrescriptionView({ patient, onSubmitPrescription }) {
             body { font-family: Arial, sans-serif; padding: 20px; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #555; padding: 6px; text-align: center; }
-            h1 { text-align: center; }
+            h1, h2 { text-align: center; }
           </style>
         </head>
         <body>
@@ -113,27 +110,51 @@ export default function PrescriptionView({ patient, onSubmitPrescription }) {
 
   return (
     <div>
-      <h2>Patient: {patient.name} — {patient.patientId}</h2>
-      <p>Age: {patient.age} | Weight: {patient.weight} | Height: {patient.height}</p>
+      <h2>
+        Patient: {patient.name} — {patient.patientId}
+      </h2>
 
-      {/* 🔴 ALLERGY WARNING */}
+      <p>
+        <strong>Age:</strong> {patient.age}
+      </p>
+
       <p style={{ color: 'red', fontWeight: 'bold' }}>
         ⚠ Allergies: {patient.allergies || 'None'}
       </p>
 
-      <p>Case History: {patient.caseHistory}</p>
-
-      {/* ---------- Prescription Entry Section ---------- */}
+      {/* ---------- PRINTABLE PRESCRIPTION ---------- */}
       <div className="prescribe-box" id="printable-prescription">
         <h1>Doctor Prescription</h1>
+
         <p><strong>Doctor:</strong> {doctorName}</p>
         <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
-        <p><strong>Allergies:</strong> {patient.allergies || 'None'}</p>
 
-        <input value={doctorName} disabled />
+        <table>
+          <thead>
+            <tr>
+              <th>Medicine</th>
+              <th>Times</th>
+              <th>Days</th>
+              <th>Total Qty</th>
+            </tr>
+          </thead>
+          <tbody>
+            {medicines.map((m, i) => (
+              <tr key={i}>
+                <td>{m.name}</td>
+                <td>{m.times}</td>
+                <td>{m.days}</td>
+                <td>{m.totalQuantity}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
+      {/* ---------- NON-PRINT ---------- */}
+      <div className="non-print">
         <textarea
-          placeholder="Notes"
+          placeholder="Notes (not printed)"
           value={notes}
           onChange={e => setNotes(e.target.value)}
         />
@@ -150,39 +171,9 @@ export default function PrescriptionView({ patient, onSubmitPrescription }) {
         ))}
 
         <button onClick={addMed}>➕ Add medicine</button>
-
-        <div className="summary">
-          <h4>Prescription Summary</h4>
-          <table>
-            <thead>
-              <tr>
-                <th>Medicine</th>
-                <th>Times</th>
-                <th>Days</th>
-                <th>Total Qty</th>
-              </tr>
-            </thead>
-            <tbody>
-              {medicines.map((m, i) => (
-                <tr key={i}>
-                  <td>{m.name}</td>
-                  <td>{m.times}</td>
-                  <td>{m.days}</td>
-                  <td>{m.totalQuantity}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <p><strong>Total Medicines:</strong> {computeTotalMedicines()}</p>
-          <p><strong>Total Tablets:</strong> {computeTotalQuantities()}</p>
-
-          {notes && (
-            <p><strong>Notes:</strong> {notes}</p>
-          )}
-        </div>
       </div>
 
+      {/* ---------- ACTIONS ---------- */}
       <div className="actions">
         <button onClick={submit}>💾 Save Prescription</button>
         <button onClick={printPrescription}>🖨️ Print Prescription</button>

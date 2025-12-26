@@ -1,13 +1,27 @@
 const Patient = require('../models/Patient');
-const { generatePatientId, generatePrescriptionId } = require('../utils/generateId');
+const Counter = require('../models/Counter');
 
+/* --------------------------------------------------
+   🔢 AUTO-INCREMENT PATIENT ID (NUMERIC)
+-------------------------------------------------- */
+async function getNextPatientId() {
+  const counter = await Counter.findOneAndUpdate(
+    { name: 'patientId' },
+    { $inc: { seq: 1 } },
+    { new: true, upsert: true }
+  );
+  return counter.seq;
+}
+
+/* --------------------------------------------------
+   ➕ CREATE PATIENT
+-------------------------------------------------- */
 async function createPatient(req, res) {
   try {
     const {
       name,
       dob,
       age,
-      caseHistory,
       contact,
       address,
       assignedDoctor,
@@ -18,42 +32,56 @@ async function createPatient(req, res) {
       return res.status(400).json({ error: 'Name and Doctor are required' });
     }
 
-    const patientId = generatePatientId();
+    // ✅ Numeric hospital-style patient ID
+    const patientId = await getNextPatientId();
 
     const patient = new Patient({
       patientId,
       name,
       dob,
       age,
-      caseHistory,
       contact,
       address,
       assignedDoctor,
-      allergies
+      allergies: allergies || 'None',
+      prescriptions: []
     });
 
     await patient.save();
     res.status(201).json(patient);
+
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 }
 
-
+/* --------------------------------------------------
+   📋 LIST PATIENTS (OPD QUEUE)
+-------------------------------------------------- */
 async function listPatients(req, res) {
   try {
-    const patients = await Patient.find().sort({ createdAt: -1 }).limit(100);
+    const patients = await Patient
+      .find()
+      .sort({ createdAt: -1 })
+      .limit(100);
+
     res.json(patients);
+
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 }
 
+/* --------------------------------------------------
+   🔍 GET SINGLE PATIENT (BY NUMERIC ID)
+-------------------------------------------------- */
 async function getPatient(req, res) {
   try {
-    const patient = await Patient.findOne({
-      patientId: req.params.id
-    });
+    const patientId = Number(req.params.id);
+
+    const patient = await Patient.findOne({ patientId });
 
     if (!patient) {
       return res.status(404).json({ error: 'Patient not found' });
@@ -67,66 +95,60 @@ async function getPatient(req, res) {
   }
 }
 
-
+/* --------------------------------------------------
+   💊 ADD PRESCRIPTION
+-------------------------------------------------- */
 async function addPrescription(req, res) {
   try {
-    const { patientId } = req.params;
+    const patientId = Number(req.params.patientId);
     const { doctorName, medicines, notes } = req.body;
+
     if (!medicines || !Array.isArray(medicines) || medicines.length === 0) {
       return res.status(400).json({ error: 'Medicines required' });
     }
-    const patient = await Patient.findOne({ patientId });
-    if (!patient) return res.status(404).json({ error: 'Patient not found' });
 
-    // Compute totalQuantity if not provided: assume times string like "1-1-0" -> count of 1s per day
-    const prescriptions = patient.prescriptions || [];
-    const prescriptionId = generatePrescriptionId();
+    const patient = await Patient.findOne({ patientId });
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    const prescriptionId = `RX-${Date.now()}`;
 
     const meds = medicines.map(m => {
-      const parts = m.times.split('-').map(p => Number(p || 0));
+      const parts = m.times.split('-').map(n => Number(n || 0));
       const dosesPerDay = parts.reduce((a, b) => a + b, 0);
       const totalQuantity = dosesPerDay * m.days;
-      return { name: m.name, times: m.times, days: m.days, totalQuantity };
+
+      return {
+        name: m.name,
+        times: m.times,
+        days: m.days,
+        totalQuantity
+      };
     });
 
-    const prescription = { prescriptionId, doctorName, medicines: meds, notes };
-    prescriptions.push(prescription);
-    patient.prescriptions = prescriptions;
+    const prescription = {
+      prescriptionId,
+      doctorName,
+      medicines: meds,
+      notes,
+      date: new Date()
+    };
+
+    patient.prescriptions.push(prescription);
     await patient.save();
-    res.status(201).json({ prescription, patient });
+
+    res.status(201).json({ prescription });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 }
 
-async function searchPatients(req, res) {
-  console.log('🔍 Search Query:', req.query);
-  try {
-    const { patientId, name, contact } = req.query;
-
-    const query = {};
-
-    if (patientId) {
-      query.patientId = patientId;
-    }
-
-    if (contact) {
-      query.contact = contact;
-    }
-
-    if (name) {
-      query.name = { $regex: name, $options: 'i' }; // partial match
-    }
-
-    const patients = await Patient.find(query).limit(20);
-    res.json(patients);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Search failed' });
-  }
-}
+/* --------------------------------------------------
+   🔎 SEARCH PATIENTS
+-------------------------------------------------- */
 async function searchPatients(req, res) {
   try {
     console.log('🔍 Search Query:', req.query);
@@ -135,7 +157,7 @@ async function searchPatients(req, res) {
     const conditions = [];
 
     if (patientId) {
-      conditions.push({ patientId });
+      conditions.push({ patientId: Number(patientId) });
     }
 
     if (name) {
@@ -150,7 +172,10 @@ async function searchPatients(req, res) {
       return res.json([]);
     }
 
-    const patients = await Patient.find({ $or: conditions }).limit(20);
+    const patients = await Patient
+      .find({ $or: conditions })
+      .limit(20);
+
     res.json(patients);
 
   } catch (err) {
@@ -159,4 +184,13 @@ async function searchPatients(req, res) {
   }
 }
 
-module.exports = { createPatient, listPatients, getPatient, addPrescription, searchPatients };
+/* --------------------------------------------------
+   📦 EXPORTS
+-------------------------------------------------- */
+module.exports = {
+  createPatient,
+  listPatients,
+  getPatient,
+  addPrescription,
+  searchPatients
+};
