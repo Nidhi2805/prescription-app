@@ -7,7 +7,7 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #fafcfd;
   min-height: 100vh;
   padding: 2rem;
   color: #333;
@@ -31,20 +31,23 @@ header h1 {
 button {
   padding: 0.7rem 1.2rem;
   margin: 0.4rem;
-  border: none;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
   font-size: 0.95rem;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  color: #0077be;
+  border: 2px solid #0077be;
+  flex: 1;
 }
 
 button:hover {
+  background: #f0f8ff;
+  border-color: #005a94;
+  color: #005a94;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 button:active {
@@ -511,4 +514,44 @@ tbody tr:last-child td {
     border: none;
     background: transparent;
   }
+
+  .medicine-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    background: #ffffff;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+  }
+  
+  .medicine-row input {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+  
+  .qty-label {
+    font-weight: bold;
+    color: green;
+    min-width: 80px;
+  }
+  
+  .medicine-row button {
+    background: #e63946;
+    color: white;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .medicine-row button:hover {
+    background: #d62828;
+  }
+
+  
+  
 }

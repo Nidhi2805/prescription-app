@@ -25,7 +25,9 @@ async function createPatient(req, res) {
       contact,
       address,
       assignedDoctor,
-      allergies
+      allergies, 
+      weight, 
+      sex
     } = req.body;
 
     if (!name || !assignedDoctor) {
@@ -40,6 +42,8 @@ async function createPatient(req, res) {
       name,
       dob,
       age,
+      sex,
+      weight,
       contact,
       address,
       assignedDoctor,
@@ -114,16 +118,18 @@ async function addPrescription(req, res) {
 
     const prescriptionId = `RX-${Date.now()}`;
 
-    const meds = medicines.map(m => {
-      const parts = m.times.split('-').map(n => Number(n || 0));
+    const meds = medicines.map((m) => {
+      const parts = m.times.split('-').map(p => Number(p || 0));
       const dosesPerDay = parts.reduce((a, b) => a + b, 0);
       const totalQuantity = dosesPerDay * m.days;
-
+    
       return {
         name: m.name,
         times: m.times,
         days: m.days,
-        totalQuantity
+        totalQuantity,
+        specialNote: m.specialNote || '',
+        specialNoteMarathi: m.specialNote || '-'  // Placeholder
       };
     });
 

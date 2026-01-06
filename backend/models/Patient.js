@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 const MedicineSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  times: { type: String, required: true }, // e.g. "1-1-0"
+  times: { type: String, required: true },
   days: { type: Number, required: true },
-  totalQuantity: { type: Number, required: true } // optional precomputed
+  totalQuantity: { type: Number, required: true }
 });
 
 const PrescriptionSchema = new mongoose.Schema({
@@ -19,8 +19,11 @@ const PatientSchema = new mongoose.Schema({
   patientId: { type: Number, required: true, unique: true },
   name: { type: String, required: true },
   age: Number,
-  weight: Number,
-  height: Number,
+
+  // 🔥 UPDATED: Store as String (ex: “65 kg”)
+  weight: { type: String },
+
+  // ❌ Removed height — no longer in form
   contact: String,
   caseHistory: String,
 
@@ -30,7 +33,7 @@ const PatientSchema = new mongoose.Schema({
   },
 
   allergies: {
-    type: String,   // example: "Penicillin, Dust, Peanuts"
+    type: String,
     default: 'None'
   },
 
@@ -43,10 +46,16 @@ const PatientSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+
+  // 🔥 NEW FIELD
+  sex: {
+    type: String,
+    enum: ["Male", "Female", "Other", ""],
+    default: ""
+  },
   
   createdAt: { type: Date, default: Date.now },
   prescriptions: [PrescriptionSchema]
 });
-
 
 module.exports = mongoose.model('Patient', PatientSchema);
