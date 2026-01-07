@@ -73,9 +73,7 @@ export default function ReceptionForm() {
   }
 
   return (
-    <div style={{
-
-    }}>
+    <div>
       <style>{`
         .card {
           max-width: 800px;
