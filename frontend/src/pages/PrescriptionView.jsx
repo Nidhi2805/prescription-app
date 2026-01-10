@@ -1,19 +1,723 @@
 import React, { useState, useEffect } from 'react';
-import MedicineAutocomplete from '../components/MedicineAutocomplete';
+import '../styles/PrescriptionView.css'
+//import MoleculeAutocomplete from '../components/MoleculeAutocomplete';
+
+const MEDICINE_CONFIG = {
+  // You can switch between local and API data
+  useLocalData: true, // Set to false when you have API endpoint
+  apiEndpoint: '/api/medicines', // Your backend endpoint
+  // Or use public API like: 'https://api.fda.gov/drug/label.json'
+};
+
+// Orthopedic-specific medicine database (expandable)
+const ORTHOPEDIC_MEDICINES = [
+  {
+    molecule: "Paracetamol",
+    tradeNames: ["Crocin", "Dolo 650", "Calpol", "Pacimol"],
+    defaultTimes: "1-0-1",
+    defaultDays: 3,
+    category: "Analgesic",
+    indication: "Pain relief"
+  },
+  {
+    molecule: "Ibuprofen",
+    tradeNames: ["Brufen", "Combiflam", "Advil", "Ibugesic"],
+    defaultTimes: "1-1-1",
+    defaultDays: 5,
+    category: "NSAID",
+    indication: "Pain and inflammation"
+  },
+  {
+    molecule: "Diclofenac Sodium",
+    tradeNames: ["Voveran", "Diclomax", "Dynapar", "Voltaren"],
+    defaultTimes: "1-0-1",
+    defaultDays: 5,
+    category: "NSAID",
+    indication: "Pain and inflammation"
+  },
+  {
+    molecule: "Aceclofenac",
+    tradeNames: ["Hifenac", "Zerodol", "Aceclo", "Arflur"],
+    defaultTimes: "1-0-1",
+    defaultDays: 5,
+    category: "NSAID",
+    indication: "Pain and inflammation"
+  },
+  {
+    molecule: "Etoricoxib",
+    tradeNames: ["Etoshine", "Etody", "Nucoxia", "Etova"],
+    defaultTimes: "1-0-0",
+    defaultDays: 5,
+    category: "COX-2 Inhibitor",
+    indication: "Acute pain, osteoarthritis"
+  },
+  {
+    molecule: "Tramadol",
+    tradeNames: ["Tramazac", "Ultracet", "Tramadol", "Tramal"],
+    defaultTimes: "1-0-1",
+    defaultDays: 3,
+    category: "Opioid Analgesic",
+    indication: "Moderate to severe pain"
+  },
+  {
+    molecule: "Methylcobalamin",
+    tradeNames: ["Neurobion", "Mecoblend", "Methylcobal", "Nervijen"],
+    defaultTimes: "1-0-0",
+    defaultDays: 30,
+    category: "Vitamin B12",
+    indication: "Nerve health, neuropathy"
+  },
+  {
+    molecule: "Calcium + Vitamin D3",
+    tradeNames: ["Shelcal", "Calcitas", "Calcimax", "Ostocalcium"],
+    defaultTimes: "1-0-1",
+    defaultDays: 30,
+    category: "Supplement",
+    indication: "Bone health"
+  },
+  {
+    molecule: "Glucosamine + Chondroitin",
+    tradeNames: ["Glucosamine Plus", "Cartigrow", "Jointace", "Osteocare"],
+    defaultTimes: "1-0-0",
+    defaultDays: 60,
+    category: "Supplement",
+    indication: "Joint health, osteoarthritis"
+  },
+  {
+    molecule: "Thiocolchicoside",
+    tradeNames: ["Myoril", "Thioquest", "Muscoflex", "Nise Plus"],
+    defaultTimes: "1-0-1",
+    defaultDays: 5,
+    category: "Muscle Relaxant",
+    indication: "Muscle spasm"
+  },
+  {
+    molecule: "Tizanidine",
+    tradeNames: ["Sirdalud", "Tizan", "Myolax", "Relaxo"],
+    defaultTimes: "0-0-1",
+    defaultDays: 7,
+    category: "Muscle Relaxant",
+    indication: "Muscle spasticity"
+  },
+  {
+    molecule: "Serratiopeptidase",
+    tradeNames: ["Enzomac", "Serral", "Serratio", "Serradic"],
+    defaultTimes: "1-0-1",
+    defaultDays: 5,
+    category: "Enzyme",
+    indication: "Anti-inflammatory, reduces swelling"
+  },
+  {
+    molecule: "Pantoprazole",
+    tradeNames: ["Pan", "Pantop", "Controloc", "Pantocid"],
+    defaultTimes: "1-0-0",
+    defaultDays: 5,
+    category: "Proton Pump Inhibitor",
+    indication: "Gastric protection"
+  },
+  {
+    molecule: "Rabeprazole",
+    tradeNames: ["Rablet", "Razo", "Rabicip", "Aciloc"],
+    defaultTimes: "1-0-0",
+    defaultDays: 5,
+    category: "Proton Pump Inhibitor",
+    indication: "Gastric protection"
+  }
+];
+
+// Medicine data service - can switch between local and API
+const MedicineDataService = {
+  async fetchMedicines() {
+    if (MEDICINE_CONFIG.useLocalData) {
+      // Return local data
+      return Promise.resolve(ORTHOPEDIC_MEDICINES);
+    } else {
+      // Fetch from API
+      try {
+        const response = await fetch(MEDICINE_CONFIG.apiEndpoint);
+        const data = await response.json();
+        return data.medicines || data;
+      } catch (error) {
+        console.error('Failed to fetch medicines from API:', error);
+        // Fallback to local data
+        return ORTHOPEDIC_MEDICINES;
+      }
+    }
+  },
+
+  async searchMedicine(query) {
+    const medicines = await this.fetchMedicines();
+    return medicines.filter(m =>
+      m.molecule.toLowerCase().includes(query.toLowerCase())
+    );
+  },
+
+  async getMedicineByName(moleculeName) {
+    const medicines = await this.fetchMedicines();
+    return medicines.find(m => m.molecule === moleculeName);
+  }
+};
+
+function MedicineAdmin({ onClose, onSave, initialMedicines }) {
+  const [medicines, setMedicines] = useState(initialMedicines || ORTHOPEDIC_MEDICINES);
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [newMedicine, setNewMedicine] = useState({
+    molecule: '',
+    tradeNames: [],
+    defaultTimes: '1-0-1',
+    defaultDays: 5,
+    category: '',
+    indication: ''
+  });
+  const [tradeNameInput, setTradeNameInput] = useState('');
+
+  function handleAddTradeName() {
+    if (tradeNameInput.trim()) {
+      setNewMedicine({
+        ...newMedicine,
+        tradeNames: [...newMedicine.tradeNames, tradeNameInput.trim()]
+      });
+      setTradeNameInput('');
+    }
+  }
+
+  function handleRemoveTradeName(index) {
+    setNewMedicine({
+      ...newMedicine,
+      tradeNames: newMedicine.tradeNames.filter((_, i) => i !== index)
+    });
+  }
+
+  function handleSaveMedicine() {
+    if (!newMedicine.molecule || newMedicine.tradeNames.length === 0) {
+      alert('Please fill molecule name and at least one trade name');
+      return;
+    }
+
+    if (editingIndex !== null) {
+      const updated = [...medicines];
+      updated[editingIndex] = newMedicine;
+      setMedicines(updated);
+      setEditingIndex(null);
+    } else {
+      setMedicines([...medicines, newMedicine]);
+    }
+
+    setNewMedicine({
+      molecule: '',
+      tradeNames: [],
+      defaultTimes: '1-0-1',
+      defaultDays: 5,
+      category: '',
+      indication: ''
+    });
+  }
+
+  function handleEdit(index) {
+    setNewMedicine(medicines[index]);
+    setEditingIndex(index);
+  }
+
+  function handleDelete(index) {
+    if (confirm('Are you sure you want to delete this medicine?')) {
+      setMedicines(medicines.filter((_, i) => i !== index));
+    }
+  }
+
+  function handleSaveAll() {
+    onSave(medicines);
+    alert('Medicine database updated successfully!');
+  }
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10000,
+      overflow: 'auto',
+      padding: '20px'
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        width: '90%',
+        maxWidth: '1000px',
+        maxHeight: '90vh',
+        overflow: 'auto',
+        padding: '20px'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <h2>Medicine Database Manager</h2>
+          <button onClick={onClose} style={{
+            padding: '8px 15px',
+            backgroundColor: '#95a5a6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}>✕ Close</button>
+        </div>
+
+        {/* Add/Edit Form */}
+        <div style={{
+          border: '2px solid #3498db',
+          padding: '15px',
+          marginBottom: '20px',
+          borderRadius: '8px',
+          backgroundColor: '#f8f9fa'
+        }}>
+          <h3>{editingIndex !== null ? 'Edit Medicine' : 'Add New Medicine'}</h3>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+            <div>
+              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+                Molecule Name *
+              </label>
+              <input
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc'
+                }}
+                value={newMedicine.molecule}
+                onChange={e => setNewMedicine({ ...newMedicine, molecule: e.target.value })}
+                placeholder="e.g., Paracetamol"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+                Category
+              </label>
+              <input
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc'
+                }}
+                value={newMedicine.category}
+                onChange={e => setNewMedicine({ ...newMedicine, category: e.target.value })}
+                placeholder="e.g., NSAID, Analgesic"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+                Default Times (M-A-N)
+              </label>
+              <input
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc'
+                }}
+                value={newMedicine.defaultTimes}
+                onChange={e => setNewMedicine({ ...newMedicine, defaultTimes: e.target.value })}
+                placeholder="1-0-1"
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+                Default Days
+              </label>
+              <input
+                type="number"
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc'
+                }}
+                value={newMedicine.defaultDays}
+                onChange={e => setNewMedicine({ ...newMedicine, defaultDays: Number(e.target.value) })}
+              />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+              Indication
+            </label>
+            <input
+              style={{
+                width: '100%',
+                padding: '8px',
+                borderRadius: '4px',
+                border: '1px solid #ccc'
+              }}
+              value={newMedicine.indication}
+              onChange={e => setNewMedicine({ ...newMedicine, indication: e.target.value })}
+              placeholder="e.g., Pain and inflammation"
+            />
+          </div>
+
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+              Trade Names *
+            </label>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+              <input
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc'
+                }}
+                value={tradeNameInput}
+                onChange={e => setTradeNameInput(e.target.value)}
+                placeholder="Enter trade name"
+                onKeyPress={e => e.key === 'Enter' && handleAddTradeName()}
+              />
+              <button
+                onClick={handleAddTradeName}
+                style={{
+                  padding: '8px 15px',
+                  backgroundColor: '#27ae60',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                + Add
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {newMedicine.tradeNames.map((name, i) => (
+                <span
+                  key={i}
+                  style={{
+                    padding: '5px 10px',
+                    backgroundColor: '#3498db',
+                    color: 'white',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}
+                >
+                  {name}
+                  <span
+                    onClick={() => handleRemoveTradeName(i)}
+                    style={{ cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    ×
+                  </span>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={handleSaveMedicine}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#3498db',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            {editingIndex !== null ? '✓ Update Medicine' : '+ Add Medicine'}
+          </button>
+          {editingIndex !== null && (
+            <button
+              onClick={() => {
+                setEditingIndex(null);
+                setNewMedicine({
+                  molecule: '',
+                  tradeNames: [],
+                  defaultTimes: '1-0-1',
+                  defaultDays: 5,
+                  category: '',
+                  indication: ''
+                });
+              }}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#95a5a6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginLeft: '10px'
+              }}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+
+        {/* Medicine List */}
+        <div style={{ marginBottom: '20px' }}>
+          <h3>Current Medicines ({medicines.length})</h3>
+          <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+            {medicines.map((med, i) => (
+              <div
+                key={i}
+                style={{
+                  border: '1px solid #ddd',
+                  padding: '10px',
+                  marginBottom: '10px',
+                  borderRadius: '4px',
+                  backgroundColor: editingIndex === i ? '#e8f5e9' : 'white'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '5px' }}>
+                      {med.molecule}
+                      {med.category && (
+                        <span style={{
+                          marginLeft: '10px',
+                          padding: '2px 8px',
+                          backgroundColor: '#3498db',
+                          color: 'white',
+                          borderRadius: '10px',
+                          fontSize: '12px'
+                        }}>
+                          {med.category}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>
+                      <strong>Trade Names:</strong> {med.tradeNames.join(', ')}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#666' }}>
+                      <strong>Default:</strong> {med.defaultTimes} for {med.defaultDays} days | <strong>Indication:</strong> {med.indication}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '5px' }}>
+                    <button
+                      onClick={() => handleEdit(i)}
+                      style={{
+                        padding: '5px 10px',
+                        backgroundColor: '#f39c12',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      ✎ Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(i)}
+                      style={{
+                        padding: '5px 10px',
+                        backgroundColor: '#e74c3c',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      🗑 Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '15px', borderTop: '2px solid #ddd' }}>
+          <button
+            onClick={handleSaveAll}
+            style={{
+              padding: '12px 30px',
+              backgroundColor: '#27ae60',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '16px'
+            }}
+          >
+            💾 Save Database
+          </button>
+          <div style={{ fontSize: '12px', color: '#666', alignSelf: 'center' }}>
+            Total Medicines: {medicines.length}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MoleculeAutocomplete({ value, onSelect }) {
+  const [query, setQuery] = useState(value || "");
+  const [molecules] = useState([
+    { 
+      molecule: "Paracetamol", 
+      tradeNames: ["Crocin", "Dolo", "Calpol"],
+      defaultTimes: "1-0-1",
+      defaultDays: 3
+    },
+    { 
+      molecule: "Ibuprofen", 
+      tradeNames: ["Brufen", "Combiflam", "Advil"],
+      defaultTimes: "1-1-1",
+      defaultDays: 5
+    },
+    { 
+      molecule: "Amoxicillin", 
+      tradeNames: ["Mox", "Amoxil", "Novamox"],
+      defaultTimes: "1-0-1",
+      defaultDays: 7
+    }
+  ]);
+  const [filtered, setFiltered] = useState([]);
+
+  useEffect(() => {
+    setQuery(value || "");
+  }, [value]);
+
+  function handleInput(v) {
+    setQuery(v);
+    if (v.length < 2) {
+      setFiltered([]);
+      return;
+    }
+    const temp = molecules.filter(m =>
+      m.molecule.toLowerCase().includes(v.toLowerCase())
+    );
+    setFiltered(temp);
+  }
+
+  function selectMolecule(mol) {
+    setQuery(mol.molecule);
+    setFiltered([]);
+    onSelect(mol.molecule);
+  }
+
+  return (
+    <div style={{ position: "relative", width: "100%" }}>
+      <input
+        value={query}
+        onChange={e => handleInput(e.target.value)}
+        placeholder="Search molecule..."
+        style={{
+          width: "100%",
+          padding: "10px",
+          border: "1px solid #ccc",
+          borderRadius: "6px"
+        }}
+      />
+      {filtered.length > 0 && (
+        <div style={{
+          position: "absolute",
+          top: "45px",
+          width: "100%",
+          background: "white",
+          border: "1px solid #ccc",
+          borderRadius: "6px",
+          maxHeight: "180px",
+          overflowY: "auto",
+          zIndex: 9999,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+        }}>
+          {filtered.map((m, i) => (
+            <div
+              key={i}
+              onClick={() => selectMolecule(m)}
+              style={{
+                padding: "10px",
+                cursor: "pointer",
+                borderBottom: "1px solid #eee",
+                transition: "background 0.2s"
+              }}
+              onMouseEnter={e => e.target.style.background = "#f0f0f0"}
+              onMouseLeave={e => e.target.style.background = "white"}
+            >
+              {m.molecule}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ---------------- MedicineRow Component ----------------
 function MedicineRow({ idx, med, onChange, onRemove }) {
   const [totalQty, setTotalQty] = useState(0);
   const [englishNote, setEnglishNote] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
+  const [tradeNames, setTradeNames] = useState([]);
 
-  function handleSelect(medFromDb) {
+  // Mock molecules data with default times and days
+  const moleculesData = [
+    { 
+      molecule: "Paracetamol", 
+      tradeNames: ["Crocin", "Dolo", "Calpol"],
+      defaultTimes: "1-0-1",
+      defaultDays: 3
+    },
+    { 
+      molecule: "Ibuprofen", 
+      tradeNames: ["Brufen", "Combiflam", "Advil"],
+      defaultTimes: "1-1-1",
+      defaultDays: 5
+    },
+    { 
+      molecule: "Amoxicillin", 
+      tradeNames: ["Mox", "Amoxil", "Novamox"],
+      defaultTimes: "1-0-1",
+      defaultDays: 7
+    }
+  ];
+
+  // When molecule is selected, fetch trade names and set default times/days
+  async function handleMoleculeSelect(molecule) {
+    // Find trade names for this molecule
+    const found = moleculesData.find(m => m.molecule === molecule);
+    
+    if (found) {
+      setTradeNames(found.tradeNames);
+      
+      // Update medicine with molecule and default values
+      onChange(idx, {
+        ...med,
+        molecule: molecule,
+        name: "",  // clear name until trade name is selected
+        times: found.defaultTimes || "1-0-0",
+        days: found.defaultDays || 1
+      });
+    } else {
+      setTradeNames([]);
+      onChange(idx, {
+        ...med,
+        molecule: molecule,
+        name: "",
+        times: "1-0-0",
+        days: 1
+      });
+    }
+  }
+
+  // When trade name is selected
+  function handleTradeSelect(tradeName) {
     onChange(idx, {
-      name: medFromDb.name,
-      times: medFromDb.defaultTimes || '1-0-0',
-      days: medFromDb.defaultDays || 1,
-      totalQuantity: 0,
-      specialNote: med.specialNote || ''
+      ...med,
+      name: tradeName
     });
   }
 
@@ -33,7 +737,6 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
     
     setIsTranslating(true);
     try {
-      // Simple client-side translation mapping for common medical instructions
       const translations = {
         'take after food': 'जेवणानंतर घ्या',
         'take before food': 'जेवणाआधी घ्या',
@@ -59,7 +762,6 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
       let translatedText = translations[lowerInput];
 
       if (!translatedText) {
-        // Try to find partial matches
         for (const [key, value] of Object.entries(translations)) {
           if (lowerInput.includes(key)) {
             translatedText = value;
@@ -69,7 +771,6 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
       }
 
       if (!translatedText) {
-        // If no match found, inform user
         alert('Translation not found. Common phrases:\n- take after food\n- take before food\n- take with food\n- take on empty stomach\n- take at bedtime\n\nOr you can manually type in Marathi.');
         setIsTranslating(false);
         return;
@@ -95,10 +796,45 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
       borderRadius: '8px',
       backgroundColor: '#f9f9f9'
     }}>
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ flex: '2', minWidth: '200px' }}>
-          <MedicineAutocomplete value={med.name} onSelect={handleSelect} />
+
+      {/* Molecule Search */}
+      <div style={{ marginBottom: '10px' }}>
+        <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>
+          Search Molecule
+        </label>
+        <MoleculeAutocomplete
+          value={med.molecule || ""}
+          onSelect={handleMoleculeSelect}
+        />
+      </div>
+
+      {/* Trade Names Dropdown - Only show when molecule is selected */}
+      {tradeNames.length > 0 && (
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>
+            Select Trade Name
+          </label>
+          <select
+            style={{
+              width: "100%",
+              padding: "10px",
+              borderRadius: "6px",
+              border: "1px solid #ccc",
+              fontSize: "14px"
+            }}
+            value={med.name || ""}
+            onChange={e => handleTradeSelect(e.target.value)}
+          >
+            <option value="">-- Select Trade Name --</option>
+            {tradeNames.map((t, i) => (
+              <option key={i} value={t}>{t}</option>
+            ))}
+          </select>
         </div>
+      )}
+
+      {/* Times, Days, Quantity */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           style={{ flex: '1', minWidth: '100px', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
           placeholder="Times (1-1-0)"
@@ -137,6 +873,7 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
         </button>
       </div>
       
+      {/* Special Note Translation */}
       <div style={{ 
         marginTop: '10px', 
         padding: '10px', 
@@ -196,6 +933,62 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
           Common phrases: take after food, take before food, take with food, take on empty stomach, take at bedtime
         </div>
       </div>
+    </div>
+  );
+}
+
+// Demo Component
+export function Demo() {
+  const [medicines, setMedicines] = useState([
+    { molecule: '', name: '', times: '1-0-0', days: 1, totalQuantity: 0, specialNote: '' }
+  ]);
+
+  function changeMed(i, m) {
+    const copy = [...medicines];
+    copy[i] = m;
+    setMedicines(copy);
+  }
+
+  function removeMed(i) {
+    setMedicines(medicines.filter((_, idx) => idx !== i));
+  }
+
+  function addMed() {
+    setMedicines([
+      ...medicines,
+      { molecule: '', name: '', times: '1-0-0', days: 1, totalQuantity: 0, specialNote: '' }
+    ]);
+  }
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <h2 style={{ marginBottom: '20px' }}>Medicine Prescription</h2>
+      
+      {medicines.map((m, idx) => (
+        <MedicineRow
+          key={idx}
+          idx={idx}
+          med={m}
+          onChange={changeMed}
+          onRemove={removeMed}
+        />
+      ))}
+      
+      <button 
+        onClick={addMed}
+        style={{
+          padding: '10px 20px',
+          backgroundColor: '#27ae60',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '14px',
+          fontWeight: 'bold'
+        }}
+      >
+        ➕ Add Medicine
+      </button>
     </div>
   );
 }
@@ -524,18 +1317,7 @@ async function handleSave() {
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h2 style={{ color: '#2c3e50' }}>
-        Patient: {patient.name} — {patient.patientId}
-      </h2>
-
-      <p>
-        <strong>Age:</strong> {patient.age}
-      </p>
-
-      <p style={{ color: 'red', fontWeight: 'bold' }}>
-        ⚠ Allergies: {patient.allergies || 'None'}
-      </p>
+    <div className='prescription-container' style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
 
       {/* ---------- PRINTABLE PRESCRIPTION ---------- */}
       <div style={{ 
@@ -601,16 +1383,7 @@ async function handleSave() {
         ))}
 
         <button 
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#9b59b6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold'
-          }}
+          className='add-med-btn'
           onClick={addMed}
         >
           ➕ Add medicine
@@ -620,31 +1393,13 @@ async function handleSave() {
       {/* ---------- ACTIONS ---------- */}
       <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
         <button 
-          style={{
-            padding: '12px 24px',
-            backgroundColor: '#27ae60',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold'
-          }}
+          className='save-prescription-btn'
           onClick={handleSave}
         >
           💾 Save Prescription
         </button>
         <button 
-          style={{
-            padding: '12px 24px',
-            backgroundColor: '#3498db',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold'
-          }}
+          className='print-btn'
           onClick={printPrescription}
         >
           🖨️ Print Prescription

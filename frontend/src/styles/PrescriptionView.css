@@ -1,0 +1,290 @@
+/* Prescription View Component Styling */
+/* Add this CSS to your project */
+
+/* Main Container */
+.prescription-container {
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #f8fbfd 0%, #ffffff 100%);
+    min-height: 100vh;
+  }
+  
+  /* Header Section */
+  .prescription-container > h2 {
+    color: #003d5c;
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 3px solid #0077be;
+  }
+  
+  .prescription-container > p {
+    font-size: 15px;
+    color: #2c3e50;
+    margin: 10px 0;
+    padding: 8px 12px;
+    background: #f0f8ff;
+    border-radius: 6px;
+    border-left: 4px solid #0077be;
+  }
+  
+  .prescription-container > p strong {
+    color: #0077be;
+    font-weight: 600;
+  }
+  
+  /* Allergy Warning */
+  .prescription-container > p[style*="red"] {
+    background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%) !important;
+    border-left: 4px solid #dc3545 !important;
+    color: #721c24 !important;
+    font-weight: 600 !important;
+    padding: 12px 16px !important;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.15);
+  }
+  
+  /* Printable Prescription Section */
+  #printable-prescription {
+    border: 2px solid #0077be !important;
+    padding: 25px !important;
+    margin-bottom: 30px !important;
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0, 119, 190, 0.1) !important;
+  }
+  
+  #printable-prescription h1 {
+    text-align: center !important;
+    color: #003d5c !important;
+    font-size: 28px !important;
+    margin-bottom: 20px !important;
+    padding-bottom: 15px !important;
+    border-bottom: 2px solid #e1f0f7 !important;
+  }
+  
+  #printable-prescription > p {
+    font-size: 15px !important;
+    margin: 8px 0 !important;
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+  }
+  
+  #printable-prescription strong {
+    color: #0077be;
+    font-weight: 600;
+  }
+  
+  /* Prescription Table */
+  #printable-prescription table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+  
+  #printable-prescription table thead tr {
+    background: linear-gradient(135deg, #0077be 0%, #005a94 100%) !important;
+  }
+  
+  #printable-prescription table thead tr th {
+    color: white !important;
+    padding: 12px 14px !important;
+    text-align: left !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+  }
+  
+  #printable-prescription table tbody tr {
+    transition: background-color 0.2s ease;
+  }
+  
+  #printable-prescription table tbody tr:hover {
+    background-color: #f0f8ff !important;
+  }
+  
+  #printable-prescription table tbody tr td {
+    padding: 12px 14px !important;
+    border-bottom: 1px solid #e1f0f7 !important;
+    color: #2c3e50 !important;
+    font-size: 14px !important;
+  }
+  
+  #printable-prescription table tbody tr:last-child td {
+    border-bottom: none !important;
+  }
+  
+  .special-note-cell {
+    color: #0077be !important;
+    font-style: italic;
+    font-size: 13px !important;
+  }
+  
+  /* Notes Textarea */
+  .prescription-container textarea {
+    width: 100% !important;
+    min-height: 100px !important;
+    padding: 14px 16px !important;
+    border-radius: 8px !important;
+    border: 2px solid #d4e6f1 !important;
+    font-size: 14px !important;
+    font-family: inherit !important;
+    background-color: #fafcfd !important;
+    transition: all 0.3s ease !important;
+    resize: vertical !important;
+    line-height: 1.6 !important;
+  }
+  
+  .prescription-container textarea:focus {
+    outline: none !important;
+    border-color: #0077be !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(0, 119, 190, 0.1) !important;
+  }
+  
+  .prescription-container textarea::placeholder {
+    color: #7f8c9a !important;
+  }
+  
+  /* Medicine Section Header */
+  .prescription-container > div > h4 {
+    margin-top: 25px !important;
+    margin-bottom: 20px !important;
+    color: #003d5c !important;
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    padding-bottom: 10px !important;
+    border-bottom: 2px solid #e1f0f7 !important;
+  }
+  
+  /* Add Medicine Button */
+  .prescription-container > div > button[style*="#9b59b6"] {
+    padding: 12px 24px !important;
+    background: linear-gradient(135deg, #6c5ce7 0%, #5f3dc4 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+  }
+  
+  .prescription-container > div > button[style*="#9b59b6"]:hover {
+    background: linear-gradient(135deg, #5f3dc4 0%, #4c3db8 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(108, 92, 231, 0.4) !important;
+  }
+  
+  /* Action Buttons (Save & Print) */
+  .prescription-container > div:last-child {
+    display: flex !important;
+    gap: 15px !important;
+    margin-top: 30px !important;
+    padding-top: 20px !important;
+    border-top: 2px solid #e1f0f7 !important;
+  }
+  
+  .prescription-container > div:last-child button {
+    padding: 14px 28px !important;
+    border: none !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    flex: 1 !important;
+  }
+  
+  /* Save Button */
+  .prescription-container > div:last-child button[style*="#27ae60"] {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important;
+  }
+  
+  .prescription-container > div:last-child button[style*="#27ae60"]:hover {
+    background: linear-gradient(135deg, #218838 0%, #1e7e34 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4) !important;
+  }
+  
+  /* Print Button */
+  .prescription-container > div:last-child button[style*="#3498db"] {
+    background: linear-gradient(135deg, #0077be 0%, #005a94 100%) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 119, 190, 0.3) !important;
+  }
+  
+  .prescription-container > div:last-child button[style*="#3498db"]:hover {
+    background: linear-gradient(135deg, #005a94 0%, #004773 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(0, 119, 190, 0.4) !important;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .prescription-container {
+      padding: 20px 15px;
+    }
+  
+    .prescription-container > h2 {
+      font-size: 22px;
+    }
+  
+    #printable-prescription {
+      padding: 15px !important;
+    }
+  
+    #printable-prescription h1 {
+      font-size: 24px !important;
+    }
+  
+    .prescription-container > div:last-child {
+      flex-direction: column !important;
+    }
+  
+    .prescription-container > div:last-child button {
+      width: 100% !important;
+    }
+  
+    /* Make prescription table scrollable on mobile */
+    #printable-prescription table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  }
+  
+  /* Print Styles */
+  @media print {
+    .prescription-container {
+      background: white;
+      padding: 0;
+    }
+  
+    .prescription-container > div:last-child,
+    .prescription-container > div > button[style*="#9b59b6"],
+    .prescription-container textarea {
+      display: none !important;
+    }
+  
+    #printable-prescription {
+      border: none !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+      padding: 20px !important;
+    }
+  
+  }
