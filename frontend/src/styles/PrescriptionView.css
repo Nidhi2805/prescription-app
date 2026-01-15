@@ -209,7 +209,7 @@
   
   /* Save Button */
   .prescription-container > div:last-child button[style*="#27ae60"] {
-    background: linear-gradient(135deg, #28a745 0%, #218838 100%) !important;
+    /* background: linear-gradient(135deg, #28a745 0%, #218838 100%) !important;
     color: white !important;
     box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important;
   }
@@ -218,7 +218,7 @@
     background: linear-gradient(135deg, #218838 0%, #1e7e34 100%) !important;
     transform: translateY(-2px) !important;
     box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4) !important;
-  }
+  } */
   
   /* Print Button */
   .prescription-container > div:last-child button[style*="#3498db"] {
@@ -286,5 +286,168 @@
       margin: 0 !important;
       padding: 20px !important;
     }
+
+    /* Previous Prescriptions Section */
+.previous-prescriptions-section {
+  .previous-prescriptions-section {
+    margin-top: 40px;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+.previous-prescriptions-section h3 {
+  color: #003d5c;
+  margin-top: 0;
+  margin-bottom: 25px;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: left;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #0077be;
+  text-shadow: none;
+}
+
+/* Cards Container - Horizontal Scroll */
+.prescriptions-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 15px;
+}
+
+.prescriptions-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.prescriptions-grid::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.prescriptions-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}
+
+.prescriptions-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Individual Prescription Card */
+.rx-card {
+  background-color: white;
+  border: 2px solid #0077be;
+  border-radius: 12px;
+  padding: 25px;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 119, 190, 0.1);
+  transition: all 0.3s ease;
+}
+
+.rx-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 119, 190, 0.2);
+  border-color: #005a94;
+}
+
+/* Card Header - Date */
+.rx-card h4 {
+  color: #2c3e50;
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 12px;
+  background: linear-gradient(135deg, #0077be 0%, #004773 100%);
+  color: white;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Doctor Info */
+.rx-card > p:first-of-type {
+  margin: 15px 0;
+  color: #555;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 8px 12px;
+  background-color: #f0f4ff;
+  border-left: 4px solid #667eea;
+  border-radius: 4px;
+}
+
+/* Medicine Table */
+.rx-card table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+  font-size: 14px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.rx-card table thead {
+  background: linear-gradient(135deg, #0077be 0%, #004773 100%);
+  color: white;
+}
+
+.rx-card table th {
+  padding: 12px 10px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rx-card table td {
+  padding: 12px 10px;
+  border: 1px solid #e0e0e0;
+  text-align: center;
+  color: #333;
+}
+
+.rx-card table tbody tr:nth-child(even) {
+  background-color: #f9f9ff;
+}
+
+.rx-card table tbody tr:hover {
+  background-color: #e8f0fe;
+  transition: background-color 0.2s ease;
+}
+
+/* Notes Section */
+.rx-card > p:last-child {
+  margin-top: 15px;
+  padding: 12px;
+  border-top: 2px solid #e0e0e0;
+  font-style: italic;
+  color: #666;
+  background-color: #fffbf0;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* Empty State */
+.no-prescriptions {
+  text-align: center;
+  padding: 40px;
+  color: white;
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+.no-prescriptions::before {
+  content: "📋";
+  display: block;
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+  }
   
   }

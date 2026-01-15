@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 
-// ✅ IMPORT CONTROLLER FUNCTIONS
+// Import controller functions
 const {
   createPatient,
   getPatient,
   listPatients,
   addPrescription,
-  searchPatients      // 🔴 THIS WAS MISSING
+  searchPatients
 } = require('../controllers/patientController');
 
 // Routes
@@ -15,6 +15,8 @@ router.post('/', createPatient);
 router.get('/', listPatients);
 router.get('/search', searchPatients);
 router.get('/:id', getPatient);
-router.post('/:id/prescriptions', addPrescription);
+
+// Add prescription (use controller — do NOT rewrite logic here)
+router.post("/:id/prescriptions", addPrescription);
 
 module.exports = router;

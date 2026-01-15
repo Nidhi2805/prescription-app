@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/PrescriptionView.css'
 //import MoleculeAutocomplete from '../components/MoleculeAutocomplete';
+import { addPrescription } from "../api/api";
 
 const MEDICINE_CONFIG = {
   // You can switch between local and API data
@@ -1019,20 +1020,17 @@ export default function PrescriptionView({ patient, onSubmitPrescription }) {
   }
 
   async function submit() {
-    if (medicines.length === 0) {
-      alert('Add at least one medicine');
-      return;
-    }
-    if (medicines.some(m => !m.name || !m.times || !m.days)) {
-      alert('Please fill all medicine fields');
-      return;
-    }
+    // Basic validation
+    if (!medicines || medicines.length === 0) { alert('Add at least one medicine'); return; }
+    if (medicines.some(m => !m.name || !m.times || !m.days)) { alert('Fill all medicine fields'); return; }
     const payload = { doctorName, medicines, notes };
     await onSubmitPrescription(payload);
-    alert('✅ Prescription saved successfully!');
+    alert('Prescription saved');
   }
 
   // --- inside PrescriptionView component ---
+
+// --- inside PrescriptionView component ---
 
 async function handleSave() {
   if (!patient || !patient.patientId) {
@@ -1045,14 +1043,44 @@ async function handleSave() {
     return;
   }
 
-  // send to parent (DoctorDashboard)
-  await onSubmitPrescription({
-    medicines,
-    notes
-  });
+  if (medicines.some(m => !m.name || !m.times || !m.days)) {
+    alert("⚠ Please fill all medicine fields");
+    return;
+  }
 
-  alert("✅ Prescription saved successfully!");
+  try {
+    const prescriptionData = {
+      prescriptionId: "RX-" + Date.now(),
+      doctorName,
+      date: new Date().toISOString(),
+      medicines: medicines.map(m => ({
+        molecule: m.molecule || "",
+        name: m.name,
+        times: m.times,
+        days: m.days,
+        totalQuantity: m.totalQuantity,
+        specialNote: m.specialNote || ""
+      })),
+      notes
+    };
+
+    // ✅ FIXED: include patientId as FIRST argument
+    await addPrescription(patient.patientId, prescriptionData);
+
+    // 🔥 NEW: fetch updated patient with new prescription
+    const updatedPatient = await getPatient(patient.patientId);
+
+    // 🔥 Send updated data to parent (DoctorDashboard)
+    onSubmitPrescription(updatedPatient);
+
+    alert("✅ Prescription saved successfully!");
+
+
+  } catch (error) {
+    console.error("Error saving prescription:", error);
+  }
 }
+
 
   async function printPrescription() {
     // Get the watermark image as base64
@@ -1405,6 +1433,46 @@ async function handleSave() {
           🖨️ Print Prescription
         </button>
       </div>
+      <div className="previous-prescriptions-section">
+  <h3>Previous Prescriptions</h3>
+  {patient.prescriptions && patient.prescriptions.length > 0 ? (
+    <div className="prescriptions-grid">
+      {patient.prescriptions.map(p => (
+        <div key={p.prescriptionId} className="rx-card">
+          <h4>📅 {new Date(p.date).toLocaleString()}</h4>
+          <p>👨‍⚕️ Doctor: {p.doctorName}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Medicine</th>
+                <th>Times</th>
+                <th>Days</th>
+                <th>Total Qty</th>
+                <th>Special Note</th>
+              </tr>
+            </thead>
+            <tbody>
+              {p.medicines.map((m, i) => (
+                <tr key={i}>
+                  <td>{m.name}</td>
+                  <td>{m.times}</td>
+                  <td>{m.days}</td>
+                  <td>{m.totalQuantity}</td>
+                  <td>{m.specialNote}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p>📝 Notes: {p.notes || 'No notes'}</p>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="no-prescriptions">
+      No previous prescriptions found
+    </div>
+  )}
+</div>
     </div>
   );
 }

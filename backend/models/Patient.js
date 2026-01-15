@@ -1,29 +1,36 @@
 const mongoose = require('mongoose');
 
+// ----------------- MEDICINE INSIDE PRESCRIPTION -----------------
 const MedicineSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  times: { type: String, required: true },
-  days: { type: Number, required: true },
-  totalQuantity: { type: Number, required: true }
+  times: { type: String, required: true },     // e.g., "1-0-1"
+  days: { type: Number, required: true },       // duration
+  totalQuantity: { type: Number, required: true },
+  specialNote: { type: String, default: "" }    // optional
 });
 
+// ----------------- PRESCRIPTION SCHEMA -----------------
 const PrescriptionSchema = new mongoose.Schema({
-  prescriptionId: { type: String, required: true },
   date: { type: Date, default: Date.now },
+
   doctorName: { type: String },
+
   medicines: [MedicineSchema],
-  notes: { type: String }
+
+  notes: { type: String, default: "" }
 });
 
+// ----------------- PATIENT SCHEMA -----------------
 const PatientSchema = new mongoose.Schema({
   patientId: { type: Number, required: true, unique: true },
+
   name: { type: String, required: true },
+
   age: Number,
 
-  // 🔥 UPDATED: Store as String (ex: “65 kg”)
+  // WEIGHT stored as string so "65 kg", "72kg", "81.5" works
   weight: { type: String },
 
-  // ❌ Removed height — no longer in form
   contact: String,
   caseHistory: String,
 
@@ -34,28 +41,30 @@ const PatientSchema = new mongoose.Schema({
 
   allergies: {
     type: String,
-    default: 'None'
+    default: "None"
   },
 
   dob: {
     type: Date,
     required: true
   },
-  
+
   address: {
     type: String,
     required: true
   },
 
-  // 🔥 NEW FIELD
+  // NEW: SEX FIELD
   sex: {
     type: String,
     enum: ["Male", "Female", "Other", ""],
     default: ""
   },
-  
+
   createdAt: { type: Date, default: Date.now },
+
+  // 🔥 PRESCRIPTIONS WILL BE STORED HERE ✔
   prescriptions: [PrescriptionSchema]
 });
 
-module.exports = mongoose.model('Patient', PatientSchema);
+module.exports = mongoose.model("Patient", PatientSchema);

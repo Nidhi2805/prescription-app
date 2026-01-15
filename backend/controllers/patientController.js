@@ -34,7 +34,6 @@ async function createPatient(req, res) {
       return res.status(400).json({ error: 'Name and Doctor are required' });
     }
 
-    // ✅ Numeric hospital-style patient ID
     const patientId = await getNextPatientId();
 
     const patient = new Patient({
@@ -84,7 +83,6 @@ async function listPatients(req, res) {
 async function getPatient(req, res) {
   try {
     const patientId = Number(req.params.id);
-
     const patient = await Patient.findOne({ patientId });
 
     if (!patient) {
@@ -104,51 +102,31 @@ async function getPatient(req, res) {
 -------------------------------------------------- */
 async function addPrescription(req, res) {
   try {
-    const patientId = Number(req.params.patientId);
-    const { doctorName, medicines, notes } = req.body;
+    const patient = await Patient.findOne({ patientId: req.params.id });
 
-    if (!medicines || !Array.isArray(medicines) || medicines.length === 0) {
-      return res.status(400).json({ error: 'Medicines required' });
-    }
-
-    const patient = await Patient.findOne({ patientId });
     if (!patient) {
-      return res.status(404).json({ error: 'Patient not found' });
+      return res.status(404).json({ error: "Patient not found" });
     }
 
-    const prescriptionId = `RX-${Date.now()}`;
-
-    const meds = medicines.map((m) => {
-      const parts = m.times.split('-').map(p => Number(p || 0));
-      const dosesPerDay = parts.reduce((a, b) => a + b, 0);
-      const totalQuantity = dosesPerDay * m.days;
-    
-      return {
-        name: m.name,
-        times: m.times,
-        days: m.days,
-        totalQuantity,
-        specialNote: m.specialNote || '',
-        specialNoteMarathi: m.specialNote || '-'  // Placeholder
-      };
-    });
-
-    const prescription = {
-      prescriptionId,
-      doctorName,
-      medicines: meds,
-      notes,
-      date: new Date()
+    const newPrescription = {
+      prescriptionId: "RX-" + Date.now(),
+      doctorName: req.body.doctorName,
+      date: req.body.date || new Date(),
+      medicines: req.body.medicines,
+      notes: req.body.notes || ""
     };
 
-    patient.prescriptions.push(prescription);
+    patient.prescriptions.push(newPrescription);
     await patient.save();
 
-    res.status(201).json({ prescription });
+    res.json({
+      success: true,
+      prescription: newPrescription,
+      allPrescriptions: patient.prescriptions
+    });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: err.message });
   }
 }
 
@@ -157,22 +135,12 @@ async function addPrescription(req, res) {
 -------------------------------------------------- */
 async function searchPatients(req, res) {
   try {
-    console.log('🔍 Search Query:', req.query);
-
     const { patientId, name, contact } = req.query;
     const conditions = [];
 
-    if (patientId) {
-      conditions.push({ patientId: Number(patientId) });
-    }
-
-    if (name) {
-      conditions.push({ name: { $regex: name, $options: 'i' } });
-    }
-
-    if (contact) {
-      conditions.push({ contact });
-    }
+    if (patientId) conditions.push({ patientId: Number(patientId) });
+    if (name)      conditions.push({ name: { $regex: name, $options: 'i' } });
+    if (contact)   conditions.push({ contact });
 
     if (conditions.length === 0) {
       return res.json([]);

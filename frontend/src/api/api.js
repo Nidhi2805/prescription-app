@@ -12,8 +12,10 @@ export const listPatients = () =>
 export const getPatient = id =>
   axios.get(`${BASE}/patients/${id}`).then(r => r.data);
 
-export const addPrescription = (id, data) =>
-  axios.post(`${BASE}/patients/${id}/prescriptions`, data).then(r => r.data);
+  export const addPrescription = (id, data) =>
+  axios.post(`${BASE}/patients/${id}/prescriptions`, data)
+       .then(r => r.data);
+
 
 export async function searchPatients(params) {
   const query = new URLSearchParams(params).toString();
