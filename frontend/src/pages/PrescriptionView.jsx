@@ -1084,18 +1084,46 @@ async function handleSave() {
 
   async function printPrescription() {
     // Get the watermark image as base64
-    let watermarkBase64 = '';
-    try {
-      const response = await fetch('/watermark.jpeg');
-      const blob = await response.blob();
-      watermarkBase64 = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-      });
-    } catch (error) {
-      console.log('Could not load watermark image:', error);
-    }
+    // BEFORE - Only loaded watermark
+try {
+  const response = await fetch('/watermark.jpeg');
+  const blob = await response.blob();
+  watermarkBase64 = await new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+} catch (error) {
+  console.log('Could not load watermark image:', error);
+}
+
+// AFTER - Now loads both watermark AND logo
+let watermarkBase64 = '';
+let logoBase64 = '';
+
+try {
+  const watermarkResponse = await fetch('/watermark.jpeg');
+  const watermarkBlob = await watermarkResponse.blob();
+  watermarkBase64 = await new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(watermarkBlob);
+  });
+} catch (error) {
+  console.log('Could not load watermark image:', error);
+}
+
+try {
+  const logoResponse = await fetch('/Logo.png');
+  const logoBlob = await logoResponse.blob();
+  logoBase64 = await new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(logoBlob);
+  });
+} catch (error) {
+  console.log('Could not load logo image:', error);
+}
 
     const printWindow = window.open('', '_blank');
     const currentDate = new Date().toLocaleDateString('en-IN', { 
@@ -1111,20 +1139,20 @@ async function handleSave() {
           <style>
             body { 
               font-family: Arial, sans-serif; 
-              padding: 40px; 
+              padding: 15px; 
               font-size: 14px;
             }
             .header {
               display: flex;
               align-items: flex-start;
-              margin-bottom: 20px;
-              padding-bottom: 15px;
+              margin-bottom: 10px;
+              padding-bottom: 8px;
               border-bottom: 2px solid #000;
             }
             .logo-box {
-              width: 100px;
-              height: 100px;
-              background-color: #c9a962;
+              width: 250px;
+              height: 250px;
+              background-color: transparent;  /* <-- Now transparent */
               display: flex;
               align-items: center;
               justify-content: center;
@@ -1154,10 +1182,10 @@ async function handleSave() {
               color: #8b0000;
               font-size: 48px;
               font-weight: bold;
-              margin: 20px 0 10px 0;
+              margin: 10px 0 5px 0;
             }
             .patient-info {
-              margin: 15px 0;
+              margin: 5px 0;
               font-size: 13px;
             }
             .patient-info-row {
@@ -1170,7 +1198,7 @@ async function handleSave() {
             table { 
               width: 100%; 
               border-collapse: collapse; 
-              margin: 20px 0;
+              margin: 10px 0;
               font-size: 13px;
               background-color: rgba(255, 255, 255, 0.9);
             }
@@ -1195,7 +1223,7 @@ async function handleSave() {
             .bottom-section {
               display: flex;
               justify-content: space-between;
-              margin-top: 30px;
+              margin-top: 15px;
               font-size: 12px;
             }
             .dispensed-by {
@@ -1219,11 +1247,9 @@ async function handleSave() {
         </head>
         <body>
           <div class="header">
-            <div class="logo-box">
-              <div style="color: white; font-size: 12px; text-align: center;">
-                [Logo]
-              </div>
-            </div>
+          <div class="logo-box">
+          <img src="${logoBase64}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'">
+        </div>
             <div class="doctor-info">
               <div class="doctor-name">Dr. ${doctorName}</div>
               <div class="qualifications">
@@ -1262,18 +1288,22 @@ async function handleSave() {
           </div>
 
           <div style="position: relative;">
-            <div style="
-              position: relative;
-              background-image: url('${watermarkBase64}');
-              background-position: centre;
-              background-repeat: no-repeat;
-              background-size: 450px 450px;
-              opacity: 0.25;
-              z-index: -1
-            ">
-              <img src="https://i.imgur.com/yourlogourl.png" alt="We Care For Your Joints" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'">
-            </div>
-            <table style="position: relative; z-index: 1; background-color: rgba(255, 255, 255, 0.97)">
+  <div style="
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.12;
+  z-index: 0;
+  pointer-events: none;
+  ">
+    <img src="${watermarkBase64}" alt="Watermark" style="width: 100%; height: 100%; object-fit: contain;">
+  </div>
+  <table style="position: relative; z-index: 1; background-color: transparent;">
               <thead>
                 <tr>
                   <th style="width: 35%;">Name of Medicine</th>
