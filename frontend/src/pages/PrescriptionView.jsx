@@ -123,39 +123,89 @@ const ORTHOPEDIC_MEDICINES = [
     defaultDays: 5,
     category: "Proton Pump Inhibitor",
     indication: "Gastric protection"
+  },
+  {
+    molecule: "Naproxen",
+    tradeNames: ["Naprosyn", "Naprogesic", "Xenobid", "Proxen"],
+    defaultTimes: "1-0-1",
+    defaultDays: 7,
+    category: "NSAID",
+    indication: "Pain and inflammation"
+  },
+  {
+    molecule: "Celecoxib",
+    tradeNames: ["Celebrex", "Celcox", "Cobix", "Celex"],
+    defaultTimes: "1-0-1",
+    defaultDays: 5,
+    category: "COX-2 Inhibitor",
+    indication: "Arthritis pain"
+  },
+  {
+    molecule: "Pregabalin",
+    tradeNames: ["Lyrica", "Pregeb", "Pregalin", "Nervigesic"],
+    defaultTimes: "0-0-1",
+    defaultDays: 14,
+    category: "Neuropathic Pain",
+    indication: "Nerve pain"
+  },
+  {
+    molecule: "Gabapentin",
+    tradeNames: ["Gabapin", "Neurontin", "Gabatop", "Gabantin"],
+    defaultTimes: "1-0-1",
+    defaultDays: 14,
+    category: "Neuropathic Pain",
+    indication: "Nerve pain"
+  },
+  {
+    molecule: "Collagen Peptide",
+    tradeNames: ["Collabar", "Collagen", "Cartigen", "Jointflex"],
+    defaultTimes: "1-0-0",
+    defaultDays: 60,
+    category: "Supplement",
+    indication: "Joint and cartilage health"
+  },
+  {
+    molecule: "Hyaluronic Acid",
+    tradeNames: ["Hylase", "HA Joint", "Synvisc", "Hylart"],
+    defaultTimes: "1-0-0",
+    defaultDays: 30,
+    category: "Supplement",
+    indication: "Joint lubrication"
   }
 ];
 
 // Medicine data service - can switch between local and API
 const MedicineDataService = {
+  localMedicines: ORTHOPEDIC_MEDICINES,
   async fetchMedicines() {
-    if (MEDICINE_CONFIG.useLocalData) {
-      // Return local data
-      return Promise.resolve(ORTHOPEDIC_MEDICINES);
-    } else {
-      // Fetch from API
-      try {
-        const response = await fetch(MEDICINE_CONFIG.apiEndpoint);
-        const data = await response.json();
-        return data.medicines || data;
-      } catch (error) {
-        console.error('Failed to fetch medicines from API:', error);
-        // Fallback to local data
-        return ORTHOPEDIC_MEDICINES;
-      }
-    }
+    return Promise.resolve(this.localMedicines);
   },
 
   async searchMedicine(query) {
     const medicines = await this.fetchMedicines();
     return medicines.filter(m =>
-      m.molecule.toLowerCase().includes(query.toLowerCase())
+      m.molecule.toLowerCase().includes(query.toLowerCase()) ||
+      m.tradeNames.some(t => t.toLowerCase().includes(query.toLowerCase()))
     );
   },
 
   async getMedicineByName(moleculeName) {
     const medicines = await this.fetchMedicines();
-    return medicines.find(m => m.molecule === moleculeName);
+    return medicines.find(m =>
+       m.molecule.toLowerCase() === moleculeName.toLowerCase()
+    );
+  },
+  async searchFDADrug(drugName) {
+    try {
+      const response = await fetch(
+        `https://api.fda.gov/drug/label.json?search=openfda.brand_name:"${drugName}"&limit=5`
+      );
+      const data = await response.json();
+      return data.results || [];
+    } catch (error) {
+      console.error('FDA API error:', error);
+      return [];
+    }
   }
 };
 
@@ -565,48 +615,36 @@ function MedicineAdmin({ onClose, onSave, initialMedicines }) {
 
 function MoleculeAutocomplete({ value, onSelect }) {
   const [query, setQuery] = useState(value || "");
-  const [molecules] = useState([
-    { 
-      molecule: "Paracetamol", 
-      tradeNames: ["Crocin", "Dolo", "Calpol"],
-      defaultTimes: "1-0-1",
-      defaultDays: 3
-    },
-    { 
-      molecule: "Ibuprofen", 
-      tradeNames: ["Brufen", "Combiflam", "Advil"],
-      defaultTimes: "1-1-1",
-      defaultDays: 5
-    },
-    { 
-      molecule: "Amoxicillin", 
-      tradeNames: ["Mox", "Amoxil", "Novamox"],
-      defaultTimes: "1-0-1",
-      defaultDays: 7
-    }
-  ]);
   const [filtered, setFiltered] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setQuery(value || "");
   }, [value]);
 
-  function handleInput(v) {
+  async function handleInput(v) {
     setQuery(v);
     if (v.length < 2) {
       setFiltered([]);
       return;
     }
-    const temp = molecules.filter(m =>
-      m.molecule.toLowerCase().includes(v.toLowerCase())
-    );
-    setFiltered(temp);
+    
+    setIsLoading(true);
+    try {
+      const results = await MedicineDataService.searchMedicine(v);
+      setFiltered(results);
+    } catch (error) {
+      console.error('Search error:', error);
+      setFiltered([]);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   function selectMolecule(mol) {
     setQuery(mol.molecule);
     setFiltered([]);
-    onSelect(mol.molecule);
+    onSelect(mol);
   }
 
   return (
@@ -614,7 +652,7 @@ function MoleculeAutocomplete({ value, onSelect }) {
       <input
         value={query}
         onChange={e => handleInput(e.target.value)}
-        placeholder="Search molecule..."
+        placeholder="Search molecule or trade name..."
         style={{
           width: "100%",
           padding: "10px",
@@ -622,7 +660,7 @@ function MoleculeAutocomplete({ value, onSelect }) {
           borderRadius: "6px"
         }}
       />
-      {filtered.length > 0 && (
+      {isLoading && (
         <div style={{
           position: "absolute",
           top: "45px",
@@ -630,29 +668,51 @@ function MoleculeAutocomplete({ value, onSelect }) {
           background: "white",
           border: "1px solid #ccc",
           borderRadius: "6px",
-          maxHeight: "180px",
+          padding: "10px",
+          textAlign: "center",
+          color: "#666"
+        }}>
+          Loading...
+        </div>
+      )}
+      {filtered.length > 0 && !isLoading && (
+        <div style={{
+          position: "absolute",
+          top: "45px",
+          width: "100%",
+          background: "white",
+          border: "1px solid #ccc",
+          borderRadius: "6px",
+          maxHeight: "200px",
           overflowY: "auto",
           zIndex: 9999,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
         }}>
           {filtered.map((m, i) => (
             <div
               key={i}
               onClick={() => selectMolecule(m)}
               style={{
-                padding: "10px",
+                padding: "12px",
                 cursor: "pointer",
-                borderBottom: "1px solid #eee",
+                borderBottom: i < filtered.length - 1 ? "1px solid #eee" : "none",
                 transition: "background 0.2s"
               }}
-              onMouseEnter={e => e.target.style.background = "#f0f0f0"}
+              onMouseEnter={e => e.target.style.background = "#f0f8ff"}
               onMouseLeave={e => e.target.style.background = "white"}
             >
-              {m.molecule}
+              <div style={{ fontWeight: "bold", color: "#2c3e50" }}>
+                {m.molecule}
+              </div>
+              <div style={{ fontSize: "12px", color: "#666", marginTop: "3px" }}>
+                {m.category} • {m.tradeNames.slice(0, 3).join(', ')}
+                {m.tradeNames.length > 3 && ` +${m.tradeNames.length - 3} more`}
+              </div>
             </div>
           ))}
         </div>
       )}
+      
     </div>
   );
 }
@@ -663,58 +723,21 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
   const [englishNote, setEnglishNote] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const [tradeNames, setTradeNames] = useState([]);
+  const [selectedMolecule, setSelectedMolecule] = useState(null);
 
-  // Mock molecules data with default times and days
-  const moleculesData = [
-    { 
-      molecule: "Paracetamol", 
-      tradeNames: ["Crocin", "Dolo", "Calpol"],
-      defaultTimes: "1-0-1",
-      defaultDays: 3
-    },
-    { 
-      molecule: "Ibuprofen", 
-      tradeNames: ["Brufen", "Combiflam", "Advil"],
-      defaultTimes: "1-1-1",
-      defaultDays: 5
-    },
-    { 
-      molecule: "Amoxicillin", 
-      tradeNames: ["Mox", "Amoxil", "Novamox"],
-      defaultTimes: "1-0-1",
-      defaultDays: 7
-    }
-  ];
-
-  // When molecule is selected, fetch trade names and set default times/days
-  async function handleMoleculeSelect(molecule) {
-    // Find trade names for this molecule
-    const found = moleculesData.find(m => m.molecule === molecule);
+  async function handleMoleculeSelect(moleculeData) {
+    setSelectedMolecule(moleculeData);
+    setTradeNames(moleculeData.tradeNames || []);
     
-    if (found) {
-      setTradeNames(found.tradeNames);
-      
-      // Update medicine with molecule and default values
-      onChange(idx, {
-        ...med,
-        molecule: molecule,
-        name: "",  // clear name until trade name is selected
-        times: found.defaultTimes || "1-0-0",
-        days: found.defaultDays || 1
-      });
-    } else {
-      setTradeNames([]);
-      onChange(idx, {
-        ...med,
-        molecule: molecule,
-        name: "",
-        times: "1-0-0",
-        days: 1
-      });
-    }
+    onChange(idx, {
+      ...med,
+      molecule: moleculeData.molecule,
+      name: "",
+      times: moleculeData.defaultTimes || "1-0-0",
+      days: moleculeData.defaultDays || 1
+    });
   }
 
-  // When trade name is selected
   function handleTradeSelect(tradeName) {
     onChange(idx, {
       ...med,
@@ -791,14 +814,12 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
 
   return (
     <div style={{ 
-      border: '1px solid #ddd', 
+      border: '2px solid #0077be', 
       padding: '15px', 
       marginBottom: '15px', 
       borderRadius: '8px',
       backgroundColor: '#f9f9f9'
     }}>
-
-      {/* Molecule Search */}
       <div style={{ marginBottom: '10px' }}>
         <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>
           Search Molecule
@@ -809,7 +830,19 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
         />
       </div>
 
-      {/* Trade Names Dropdown - Only show when molecule is selected */}
+      {selectedMolecule && (
+        <div style={{
+          padding: '10px',
+          backgroundColor: '#e8f5e9',
+          borderRadius: '6px',
+          marginBottom: '10px',
+          fontSize: '13px'
+        }}>
+          <strong>Category:</strong> {selectedMolecule.category} | 
+          <strong> Indication:</strong> {selectedMolecule.indication}
+        </div>
+      )}
+
       {tradeNames.length > 0 && (
         <div style={{ marginBottom: '15px' }}>
           <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>
@@ -834,7 +867,6 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
         </div>
       )}
 
-      {/* Times, Days, Quantity */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           style={{ flex: '1', minWidth: '100px', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
@@ -874,7 +906,6 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
         </button>
       </div>
       
-      {/* Special Note Translation */}
       <div style={{ 
         marginTop: '10px', 
         padding: '10px', 
@@ -937,6 +968,7 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
     </div>
   );
 }
+
 
 // Demo Component
 export function Demo() {
