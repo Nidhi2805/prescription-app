@@ -3,10 +3,11 @@ import { useParams } from 'react-router-dom';
 import { listPatients, getPatient, addPrescription } from '../api/api';
 import PatientList from '../components/PatientList';
 import PrescriptionView from './PrescriptionView';
+import MedicineAdmin from '../pages/MedicineAdmin';
 
 export default function DoctorDashboard() {
   const { patientId } = useParams(); // 👈 GET ID FROM URL
-
+  const [showMedicineAdmin, setShowMedicineAdmin] = useState(false);
   const [patients, setPatients] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [patient, setPatient] = useState(null);
@@ -304,6 +305,26 @@ export default function DoctorDashboard() {
             onSelect={openPatient}
             selectedId={selectedId}
           />
+
+<button 
+            onClick={() => setShowMedicineAdmin(true)} 
+            style={{ 
+              width: '100%',
+              marginTop: '15px',
+              padding: '12px 20px', 
+              background: 'linear-gradient(135deg, #6c5ce7 0%, #5f3dc4 100%)', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '8px', 
+              cursor: 'pointer', 
+              fontWeight: 'bold',
+              fontSize: '14px',
+              boxShadow: '0 4px 12px rgba(108, 92, 231, 0.3)',
+              transition: 'all 0.3s ease'
+            }}
+          > 
+            🔧 Manage Medicines
+          </button>
         </div>
 
         {/* RIGHT: Patient File */}
@@ -332,6 +353,9 @@ export default function DoctorDashboard() {
           )}
         </div>
       </div>
+      {showMedicineAdmin && (
+        <MedicineAdmin onClose={() => setShowMedicineAdmin(false)} />
+      )}
     </div>
   );
 }

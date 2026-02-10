@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../styles/PrescriptionView.css'
 //import MoleculeAutocomplete from '../components/MoleculeAutocomplete';
 import { addPrescription } from "../api/api";
+import { MedicineDBService } from '../services/MedicineDBService';
 
 const MEDICINE_CONFIG = {
   // You can switch between local and API data
@@ -631,7 +632,7 @@ function MoleculeAutocomplete({ value, onSelect }) {
     
     setIsLoading(true);
     try {
-      const results = await MedicineDataService.searchMedicine(v);
+      const results = MedicineDBService.searchMedicines(v);
       setFiltered(results);
     } catch (error) {
       console.error('Search error:', error);
@@ -644,7 +645,7 @@ function MoleculeAutocomplete({ value, onSelect }) {
   function selectMolecule(mol) {
     setQuery(mol.molecule);
     setFiltered([]);
-    onSelect(mol);
+    onSelect(mol); // Pass full object
   }
 
   return (
@@ -706,13 +707,11 @@ function MoleculeAutocomplete({ value, onSelect }) {
               </div>
               <div style={{ fontSize: "12px", color: "#666", marginTop: "3px" }}>
                 {m.category} • {m.tradeNames.slice(0, 3).join(', ')}
-                {m.tradeNames.length > 3 && ` +${m.tradeNames.length - 3} more`}
               </div>
             </div>
           ))}
         </div>
       )}
-      
     </div>
   );
 }
@@ -724,15 +723,18 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
   const [isTranslating, setIsTranslating] = useState(false);
   const [tradeNames, setTradeNames] = useState([]);
   const [selectedMolecule, setSelectedMolecule] = useState(null);
+  const [strengths, setStrengths] = useState([]);
 
   async function handleMoleculeSelect(moleculeData) {
     setSelectedMolecule(moleculeData);
     setTradeNames(moleculeData.tradeNames || []);
+    setStrengths(moleculeData.strengths || []);
     
     onChange(idx, {
       ...med,
       molecule: moleculeData.molecule,
       name: "",
+      strengths: "",
       times: moleculeData.defaultTimes || "1-0-0",
       days: moleculeData.defaultDays || 1
     });
@@ -843,29 +845,54 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
         </div>
       )}
 
-      {tradeNames.length > 0 && (
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>
-            Select Trade Name
-          </label>
-          <select
-            style={{
-              width: "100%",
-              padding: "10px",
-              borderRadius: "6px",
-              border: "1px solid #ccc",
-              fontSize: "14px"
-            }}
-            value={med.name || ""}
-            onChange={e => handleTradeSelect(e.target.value)}
-          >
-            <option value="">-- Select Trade Name --</option>
-            {tradeNames.map((t, i) => (
-              <option key={i} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
-      )}
+
+{tradeNames.length > 0 && (
+  <div style={{ marginBottom: '15px' }}>
+    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>
+      Select Trade Name
+    </label>
+    <select
+      style={{
+        width: "100%",
+        padding: "10px",
+        borderRadius: "6px",
+        border: "1px solid #ccc",
+        fontSize: "14px"
+      }}
+      value={med.name || ""}
+      onChange={e => handleTradeSelect(e.target.value)}
+    >
+      <option value="">-- Select Trade Name --</option>
+      {tradeNames.map((t, i) => (
+        <option key={i} value={t}>{t}</option>
+      ))}
+    </select>
+  </div>
+)}
+
+{strengths.length > 0 && (
+  <div style={{ marginBottom: '15px' }}>
+    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>
+      Select Strength
+    </label>
+    <select
+      style={{
+        width: "100%",
+        padding: "10px",
+        borderRadius: "6px",
+        border: "1px solid #ccc",
+        fontSize: "14px"
+      }}
+      value={med.strength || ""}
+      onChange={e => onChange(idx, { ...med, strength: e.target.value })}
+    >
+      <option value="">-- Select Strength --</option>
+      {strengths.map((s, i) => (
+        <option key={i} value={s}>{s}</option>
+      ))}
+    </select>
+  </div>
+)}
 
       <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
         <input
@@ -973,7 +1000,7 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
 // Demo Component
 export function Demo() {
   const [medicines, setMedicines] = useState([
-    { molecule: '', name: '', times: '1-0-0', days: 1, totalQuantity: 0, specialNote: '' }
+    { molecule: '', name: '', strength: '', times: '1-0-0', days: 1, totalQuantity: 0, specialNote: '' }
   ]);
 
   function changeMed(i, m) {
@@ -989,7 +1016,7 @@ export function Demo() {
   function addMed() {
     setMedicines([
       ...medicines,
-      { molecule: '', name: '', times: '1-0-0', days: 1, totalQuantity: 0, specialNote: '' }
+      { molecule: '', name: '', strength: '', times: '1-0-0', days: 1, totalQuantity: 0, specialNote: '' }
     ]);
   }
 
@@ -1088,6 +1115,7 @@ async function handleSave() {
       medicines: medicines.map(m => ({
         molecule: m.molecule || "",
         name: m.name,
+        strength: m.strength | "",
         times: m.times,
         days: m.days,
         totalQuantity: m.totalQuantity,
@@ -1351,7 +1379,7 @@ try {
                   const times = (m.times || '0-0-0').split('-');
                   return `
                     <tr>
-                      <td class="medicine-name">${m.name}${m.specialNote ? '<br><small style="color: #666;">(' + m.specialNote + ')</small>' : ''}</td>
+                      <td class="medicine-name">${m.name}${m.strength ? ' - ' + m.strength : ''}${m.specialNote ? '<br><small style="color: #666;">(' + m.specialNote + ')</small>' : ''}</td>
                       <td>${times[0] || '0'}</td>
                       <td>${times[1] || '0'}</td>
                       <td>${times[2] || '0'}</td>
@@ -1434,7 +1462,7 @@ try {
           <tbody>
             {medicines.map((m, i) => (
               <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#f9f9f9' : '#fff' }}>
-                <td>{m.name}</td>
+                <td>{m.name}{m.strength ? ` - ${m.strength}` : ''}</td>
                 <td>{m.times}</td>
                 <td>{m.days}</td>
                 <td>{m.totalQuantity}</td>
@@ -1516,7 +1544,7 @@ try {
             <tbody>
               {p.medicines.map((m, i) => (
                 <tr key={i}>
-                  <td>{m.name}</td>
+                  <td>{m.name}{m.strength ? ` - ${m.strength}` : ''}</td>
                   <td>{m.times}</td>
                   <td>{m.days}</td>
                   <td>{m.totalQuantity}</td>

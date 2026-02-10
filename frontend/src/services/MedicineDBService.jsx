@@ -1,0 +1,114 @@
+// src/services/MedicineDBService.js
+export const MedicineDBService = {
+    DB_KEY: 'ORTHOPEDIC_MEDICINE_DATABASE',
+    
+    initializeDB() {
+      const existing = this.getAllMedicines();
+      if (!existing || existing.length === 0) {
+        const defaultMedicines = [
+          {
+            id: "MED001",
+            molecule: "Paracetamol",
+            tradeNames: ["Crocin", "Dolo 650", "Calpol", "Pacimol"],
+            defaultTimes: "1-0-1",
+            defaultDays: 3,
+            category: "Analgesic",
+            indication: "Pain relief",
+            dosageForm: "Tablet",
+            strength: "650mg",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
+          // Add all your medicines here...
+        ];
+        this.saveMedicines(defaultMedicines);
+      }
+    },
+    
+    getAllMedicines() {
+      try {
+        const data = localStorage.getItem(this.DB_KEY);
+        return data ? JSON.parse(data) : [];
+      } catch (error) {
+        console.error('Error reading medicine database:', error);
+        return [];
+      }
+    },
+    
+    saveMedicines(medicines) {
+      try {
+        localStorage.setItem(this.DB_KEY, JSON.stringify(medicines));
+        window.dispatchEvent(new Event('medicineDBUpdated'));
+        return true;
+      } catch (error) {
+        console.error('Error saving medicine database:', error);
+        return false;
+      }
+    },
+    
+    addMedicine(medicine) {
+      const medicines = this.getAllMedicines();
+      const newMedicine = {
+        ...medicine,
+        id: `MED${String(medicines.length + 1).padStart(3, '0')}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      medicines.push(newMedicine);
+      return this.saveMedicines(medicines) ? newMedicine : null;
+    },
+    
+    updateMedicine(id, updatedData) {
+      const medicines = this.getAllMedicines();
+      const index = medicines.findIndex(m => m.id === id);
+      if (index === -1) return false;
+      
+      medicines[index] = {
+        ...medicines[index],
+        ...updatedData,
+        id: medicines[index].id,
+        createdAt: medicines[index].createdAt,
+        updatedAt: new Date().toISOString()
+      };
+      return this.saveMedicines(medicines);
+    },
+    
+    deleteMedicine(id) {
+      const medicines = this.getAllMedicines();
+      const filtered = medicines.filter(m => m.id !== id);
+      return this.saveMedicines(filtered);
+    },
+    
+    searchMedicines(query) {
+      const medicines = this.getAllMedicines();
+      const lowerQuery = query.toLowerCase();
+      return medicines.filter(m =>
+        m.molecule.toLowerCase().includes(lowerQuery) ||
+        m.tradeNames.some(t => t.toLowerCase().includes(lowerQuery)) ||
+        m.category.toLowerCase().includes(lowerQuery)
+      );
+    },
+    
+    exportDatabase() {
+      const medicines = this.getAllMedicines();
+      const dataStr = JSON.stringify(medicines, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `medicine_database_${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    },
+    
+    importDatabase(jsonData) {
+      try {
+        const medicines = JSON.parse(jsonData);
+        if (!Array.isArray(medicines)) throw new Error('Invalid format');
+        return this.saveMedicines(medicines);
+      } catch (error) {
+        console.error('Error importing database:', error);
+        return false;
+      }
+    }
+  };

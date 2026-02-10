@@ -1,11 +1,15 @@
 import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-
+import { useEffect } from 'react';
+import { MedicineDBService } from './services/MedicineDBService';
 import ReceptionForm from './pages/ReceptionForm';
 import DoctorDashboard from './pages/DoctorDashboard';
 import SearchPatient from './pages/SearchPatient';
 
 export default function App() {
+  useEffect(() => {
+    MedicineDBService.initializeDB();
+  }, []);
   return (
     <div className="app">
       <header>
