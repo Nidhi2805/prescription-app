@@ -14,12 +14,14 @@ const MedicineDBService = {
           id: "MED001",
           molecule: "Paracetamol",
           tradeNames: ["Crocin", "Dolo 650", "Calpol", "Pacimol"],
+          defaultTradename: "Crocin",
           defaultTimes: "1-0-1",
           defaultDays: 3,
           category: "Analgesic",
           indication: "Pain relief",
           dosageForm: "Tablet",
           strengths: ["500mg", "650mg", "1000mg"],
+          defaultStrength: "650mg",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         },
@@ -193,11 +195,13 @@ function MedicineAdmin({ onClose }) {
     molecule: '',
     tradeNames: [],
     defaultTimes: '1-0-1',
+    defaultTradename: '',
     defaultDays: 5,
     category: '',
     indication: '',
     dosageForm: 'Tablet',
-    strengths: []
+    strengths: [],
+    defaultStrength: ''
   });
   const [tradeNameInput, setTradeNameInput] = useState('');
   const [strengthInput, setStrengthInput] = useState('');
@@ -280,12 +284,14 @@ function MedicineAdmin({ onClose }) {
     setFormData({
       molecule: medicine.molecule,
       tradeNames: [...medicine.tradeNames],
+      defaultTradename: medicine.defaultTradename || '',
       defaultTimes: medicine.defaultTimes,
       defaultDays: medicine.defaultDays,
       category: medicine.category,
       indication: medicine.indication,
       dosageForm: medicine.dosageForm || 'Tablet',
-      strengths: medicine.strengths || []
+      strengths: medicine.strengths || [],
+      defaultStrength: medicine.defaultStrength || ''
     });
     setShowForm(true);
   }
@@ -306,12 +312,14 @@ function MedicineAdmin({ onClose }) {
     setFormData({
       molecule: '',
       tradeNames: [],
+      defaultTradename: '',
       defaultTimes: '1-0-1',
       defaultDays: 5,
       category: '',
       indication: '',
       dosageForm: 'Tablet',
-      strengths: []
+      strengths: [],
+      defaultStrength: ''
     });
     setEditingMedicine(null);
     setShowForm(false);
@@ -616,122 +624,158 @@ function MedicineAdmin({ onClose }) {
               </div>
 
               <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
-                  Trade Names *
-                </label>
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                  <input
-                    style={{
-                      flex: 1,
-                      padding: '10px',
-                      borderRadius: '6px',
-                      border: '2px solid #ddd'
-                    }}
-                    value={tradeNameInput}
-                    onChange={e => setTradeNameInput(e.target.value)}
-                    placeholder="Enter trade name"
-                    onKeyPress={e => e.key === 'Enter' && handleAddTradeName()}
-                  />
-                  <button
-                    onClick={handleAddTradeName}
-                    style={{
-                      padding: '10px 20px',
-                      backgroundColor: '#27ae60',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    + Add
-                  </button>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {formData.tradeNames.map((name, i) => (
-                    <span
-                      key={i}
-                      style={{
-                        padding: '8px 12px',
-                        backgroundColor: '#0077be',
-                        color: 'white',
-                        borderRadius: '20px',
-                        fontSize: '14px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
-                    >
-                      {name}
-                      <span
-                        onClick={() => handleRemoveTradeName(i)}
-                        style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}
-                      >
-                        ×
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              </div>
+  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+    Trade Names *
+  </label>
+  <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+    <input
+      style={{
+        flex: 1,
+        padding: '10px',
+        borderRadius: '6px',
+        border: '2px solid #ddd'
+      }}
+      value={tradeNameInput}
+      onChange={e => setTradeNameInput(e.target.value)}
+      placeholder="Enter trade name"
+      onKeyPress={e => e.key === 'Enter' && handleAddTradeName()}
+    />
+    <button
+      onClick={handleAddTradeName}
+      style={{
+        padding: '10px 20px',
+        backgroundColor: '#27ae60',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontWeight: 'bold'
+      }}
+    >
+      + Add
+    </button>
+  </div>
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+    {formData.tradeNames.map((name, i) => (
+      <span
+        key={i}
+        style={{
+          padding: '8px 12px',
+          backgroundColor: formData.defaultTradeName === name ? '#27ae60' : '#0077be', // GREEN if default
+          color: 'white',
+          borderRadius: '20px',
+          fontSize: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          cursor: 'pointer', // ADD cursor pointer
+          border: formData.defaultTradeName === name ? '2px solid #1e8449' : 'none' // ADD border if default
+        }}
+        onClick={() => setFormData({ ...formData, defaultTradeName: name })} // ADD click to set default
+        title={formData.defaultTradeName === name ? 'Default trade name (Click another to change)' : 'Click to set as default'} // ADD tooltip
+      >
+        {formData.defaultTradeName === name && '⭐ '} {/* ADD star icon for default */}
+        {name}
+        <span
+          onClick={(e) => {
+            e.stopPropagation(); // PREVENT triggering the parent onClick
+            handleRemoveTradeName(i);
+          }}
+          style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}
+        >
+          ×
+        </span>
+      </span>
+    ))}
+  </div>
+  {formData.tradeNames.length > 0 && !formData.defaultTradeName && (
+    <div style={{ 
+      marginTop: '8px', 
+      fontSize: '12px', 
+      color: '#e67e22',
+      fontStyle: 'italic'
+    }}>
+      💡 Click on a trade name to set it as default
+    </div>
+  )}
+</div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
-                  Strengths
-                </label>
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                  <input
-                    style={{
-                      flex: 1,
-                      padding: '10px',
-                      borderRadius: '6px',
-                      border: '2px solid #ddd'
-                    }}
-                    value={strengthInput}
-                    onChange={e => setStrengthInput(e.target.value)}
-                    placeholder="Enter strength (e.g., 500mg)"
-                    onKeyPress={e => e.key === 'Enter' && handleAddStrength()}
-                  />
-                  <button
-                    onClick={handleAddStrength}
-                    style={{
-                      padding: '10px 20px',
-                      backgroundColor: '#27ae60',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    + Add
-                  </button>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {formData.strengths.map((strength, i) => (
-                    <span
-                      key={i}
-                      style={{
-                        padding: '8px 12px',
-                        backgroundColor: '#9b59b6',
-                        color: 'white',
-                        borderRadius: '20px',
-                        fontSize: '14px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
-                    >
-                      {strength}
-                      <span
-                        onClick={() => handleRemoveStrength(i)}
-                        style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}
-                      >
-                        ×
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              </div>
+<div style={{ marginBottom: '15px' }}>
+  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+    Strengths
+  </label>
+  <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+    <input
+      style={{
+        flex: 1,
+        padding: '10px',
+        borderRadius: '6px',
+        border: '2px solid #ddd'
+      }}
+      value={strengthInput}
+      onChange={e => setStrengthInput(e.target.value)}
+      placeholder="Enter strength (e.g., 500mg)"
+      onKeyPress={e => e.key === 'Enter' && handleAddStrength()}
+    />
+    <button
+      onClick={handleAddStrength}
+      style={{
+        padding: '10px 20px',
+        backgroundColor: '#27ae60',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontWeight: 'bold'
+      }}
+    >
+      + Add
+    </button>
+  </div>
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+    {formData.strengths.map((strength, i) => (
+      <span
+        key={i}
+        style={{
+          padding: '8px 12px',
+          backgroundColor: formData.defaultStrength === strength ? '#27ae60' : '#9b59b6', // GREEN if default
+          color: 'white',
+          borderRadius: '20px',
+          fontSize: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          cursor: 'pointer', // ADD cursor pointer
+          border: formData.defaultStrength === strength ? '2px solid #1e8449' : 'none' // ADD border if default
+        }}
+        onClick={() => setFormData({ ...formData, defaultStrength: strength })} // ADD click to set default
+        title={formData.defaultStrength === strength ? 'Default strength (Click another to change)' : 'Click to set as default'} // ADD tooltip
+      >
+        {formData.defaultStrength === strength && '⭐ '} {/* ADD star icon for default */}
+        {strength}
+        <span
+          onClick={(e) => {
+            e.stopPropagation(); // PREVENT triggering the parent onClick
+            handleRemoveStrength(i);
+          }}
+          style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}
+        >
+          ×
+        </span>
+      </span>
+    ))}
+  </div>
+  {formData.strengths.length > 0 && !formData.defaultStrength && (
+    <div style={{ 
+      marginTop: '8px', 
+      fontSize: '12px', 
+      color: '#e67e22',
+      fontStyle: 'italic'
+    }}>
+      💡 Click on a strength to set it as default
+    </div>
+  )}
+</div>
 
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button

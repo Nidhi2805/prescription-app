@@ -733,8 +733,14 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
     onChange(idx, {
       ...med,
       molecule: moleculeData.molecule,
-      name: "",
-      strengths: "",
+      name: moleculeData.defaultTradeName || 
+            (moleculeData.tradeNames && moleculeData.tradeNames.length > 0 
+              ? moleculeData.tradeNames[0] 
+              : ""),
+      strength: moleculeData.defaultStrength || 
+                (moleculeData.strengths && moleculeData.strengths.length > 0 
+                  ? moleculeData.strengths[0] 
+                  : ""),
       times: moleculeData.defaultTimes || "1-0-0",
       days: moleculeData.defaultDays || 1
     });
