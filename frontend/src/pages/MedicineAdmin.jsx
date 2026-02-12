@@ -22,6 +22,7 @@ const MedicineDBService = {
           dosageForm: "Tablet",
           strengths: ["500mg", "650mg", "1000mg"],
           defaultStrength: "650mg",
+          specialNote: "जेवणानंतर घ्या",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         },
@@ -201,7 +202,8 @@ function MedicineAdmin({ onClose }) {
     indication: '',
     dosageForm: 'Tablet',
     strengths: [],
-    defaultStrength: ''
+    defaultStrength: '',
+    specialNote: ''
   });
   const [tradeNameInput, setTradeNameInput] = useState('');
   const [strengthInput, setStrengthInput] = useState('');
@@ -291,7 +293,8 @@ function MedicineAdmin({ onClose }) {
       indication: medicine.indication,
       dosageForm: medicine.dosageForm || 'Tablet',
       strengths: medicine.strengths || [],
-      defaultStrength: medicine.defaultStrength || ''
+      defaultStrength: medicine.defaultStrength || '',
+      specialNote: medicine.specialNote || ''
     });
     setShowForm(true);
   }
@@ -319,7 +322,8 @@ function MedicineAdmin({ onClose }) {
       indication: '',
       dosageForm: 'Tablet',
       strengths: [],
-      defaultStrength: ''
+      defaultStrength: '',
+      specialNote: ''
     });
     setEditingMedicine(null);
     setShowForm(false);
@@ -775,6 +779,101 @@ function MedicineAdmin({ onClose }) {
       💡 Click on a strength to set it as default
     </div>
   )}
+</div>
+
+<div style={{ marginBottom: '15px' }}>
+  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+    Special Note (Default note for prescriptions)
+  </label>
+  <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+    <input
+      style={{
+        flex: 1,
+        padding: '10px',
+        borderRadius: '6px',
+        border: '2px solid #ddd'
+      }}
+      value={formData.specialNote}
+      onChange={e => setFormData({ ...formData, specialNote: e.target.value })}
+      placeholder="Type in English (e.g., take after food) or Marathi directly"
+    />
+    <button
+      type="button"
+      onClick={() => {
+        if (!formData.specialNote || !formData.specialNote.trim()) {
+          alert('⚠️ Please enter some text first in the Special Note field');
+          return;
+        }
+        
+        const translations = {
+          'take after food': 'जेवणानंतर घ्या',
+          'take before food': 'जेवणाआधी घ्या',
+          'take with food': 'जेवणासोबत घ्या',
+          'take on empty stomach': 'रिकाम्या पोटी घ्या',
+          'take at bedtime': 'झोपण्याच्या वेळी घ्या',
+          'take in morning': 'सकाळी घ्या',
+          'take at night': 'रात्री घ्या',
+          'take with water': 'पाण्यासोबत घ्या',
+          'take with milk': 'दूधासोबत घ्या',
+          'do not chew': 'चघळू नका',
+          'dissolve in water': 'पाण्यात विरघळवा',
+          'after food': 'जेवणानंतर',
+          'before food': 'जेवणाआधी',
+          'with food': 'जेवणासोबत',
+          'empty stomach': 'रिकाम्या पोटी',
+          'morning': 'सकाळी',
+          'night': 'रात्री',
+          'bedtime': 'झोपण्याच्या वेळी'
+        };
+
+        const lowerInput = formData.specialNote.toLowerCase().trim();
+        let translatedText = translations[lowerInput];
+
+        if (!translatedText) {
+          for (const [key, value] of Object.entries(translations)) {
+            if (lowerInput.includes(key)) {
+              translatedText = value;
+              break;
+            }
+          }
+        }
+
+        if (translatedText) {
+          setFormData({ ...formData, specialNote: translatedText });
+          alert(`✅ Translated successfully!\n\nEnglish: ${formData.specialNote}\nMarathi: ${translatedText}`);
+        } else {
+          alert('❌ Translation not found.\n\nCommon phrases:\n• take after food\n• take before food\n• take with food\n• take on empty stomach\n• take at bedtime\n• take in morning\n• take at night\n\nYou can also type directly in Marathi.');
+        }
+      }}
+      style={{
+        padding: '10px 20px',
+        backgroundColor: '#3498db',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontWeight: 'bold',
+        whiteSpace: 'nowrap'
+      }}
+    >
+      🔄 Translate
+    </button>
+  </div>
+  <div style={{ 
+    fontSize: '11px', 
+    color: '#666',
+    fontStyle: 'italic'
+  }}>
+    💡 Type English phrase and click Translate, or type Marathi directly. This will be auto-filled in prescriptions.
+  </div>
+  <div style={{ 
+    fontSize: '11px', 
+    color: '#999',
+    fontStyle: 'italic',
+    marginTop: '5px'
+  }}>
+    Examples: "take after food", "take before food", "take with food", "take on empty stomach"
+  </div>
 </div>
 
               <div style={{ display: 'flex', gap: '10px' }}>

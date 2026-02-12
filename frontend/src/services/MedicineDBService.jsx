@@ -88,6 +88,44 @@ export const MedicineDBService = {
         m.category.toLowerCase().includes(lowerQuery)
       );
     },
+
+    // ADD this new method to MedicineDBService object:
+translateToMarathi(text) {
+  const translations = {
+    'take after food': 'जेवणानंतर घ्या',
+    'take before food': 'जेवणाआधी घ्या',
+    'take with food': 'जेवणासोबत घ्या',
+    'take on empty stomach': 'रिकाम्या पोटी घ्या',
+    'take at bedtime': 'झोपण्याच्या वेळी घ्या',
+    'take in morning': 'सकाळी घ्या',
+    'take at night': 'रात्री घ्या',
+    'take with water': 'पाण्यासोबत घ्या',
+    'take with milk': 'दूधासोबत घ्या',
+    'do not chew': 'चघळू नका',
+    'dissolve in water': 'पाण्यात विरघळवा',
+    'after food': 'जेवणानंतर',
+    'before food': 'जेवणाआधी',
+    'with food': 'जेवणासोबत',
+    'empty stomach': 'रिकाम्या पोटी',
+    'morning': 'सकाळी',
+    'night': 'रात्री',
+    'bedtime': 'झोपण्याच्या वेळी'
+  };
+
+  const lowerInput = text.toLowerCase().trim();
+  let translatedText = translations[lowerInput];
+
+  if (!translatedText) {
+    for (const [key, value] of Object.entries(translations)) {
+      if (lowerInput.includes(key)) {
+        translatedText = value;
+        break;
+      }
+    }
+  }
+
+  return translatedText || null;
+},
     
     exportDatabase() {
       const medicines = this.getAllMedicines();

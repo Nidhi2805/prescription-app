@@ -719,8 +719,6 @@ function MoleculeAutocomplete({ value, onSelect }) {
 // ---------------- MedicineRow Component ----------------
 function MedicineRow({ idx, med, onChange, onRemove }) {
   const [totalQty, setTotalQty] = useState(0);
-  const [englishNote, setEnglishNote] = useState('');
-  const [isTranslating, setIsTranslating] = useState(false);
   const [tradeNames, setTradeNames] = useState([]);
   const [selectedMolecule, setSelectedMolecule] = useState(null);
   const [strengths, setStrengths] = useState([]);
@@ -742,7 +740,8 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
                   ? moleculeData.strengths[0] 
                   : ""),
       times: moleculeData.defaultTimes || "1-0-0",
-      days: moleculeData.defaultDays || 1
+      days: moleculeData.defaultDays || 1,
+      specialNote: moleculeData.specialNote || ""
     });
   }
 
@@ -761,64 +760,6 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
     onChange(idx, { ...med, totalQuantity: qty });
   }, [med.times, med.days]);
 
-  async function translateToMarathi() {
-    if (!englishNote.trim()) {
-      alert('Please enter some text to translate');
-      return;
-    }
-    
-    setIsTranslating(true);
-    try {
-      const translations = {
-        'take after food': 'जेवणानंतर घ्या',
-        'take before food': 'जेवणाआधी घ्या',
-        'take with food': 'जेवणासोबत घ्या',
-        'take on empty stomach': 'रिकाम्या पोटी घ्या',
-        'take at bedtime': 'झोपण्याच्या वेळी घ्या',
-        'take in morning': 'सकाळी घ्या',
-        'take at night': 'रात्री घ्या',
-        'take with water': 'पाण्यासोबत घ्या',
-        'take with milk': 'दूधासोबत घ्या',
-        'do not chew': 'चघळू नका',
-        'dissolve in water': 'पाण्यात विरघळवा',
-        'after food': 'जेवणानंतर',
-        'before food': 'जेवणाआधी',
-        'with food': 'जेवणासोबत',
-        'empty stomach': 'रिकाम्या पोटी',
-        'morning': 'सकाळी',
-        'night': 'रात्री',
-        'bedtime': 'झोपण्याच्या वेळी'
-      };
-
-      const lowerInput = englishNote.toLowerCase().trim();
-      let translatedText = translations[lowerInput];
-
-      if (!translatedText) {
-        for (const [key, value] of Object.entries(translations)) {
-          if (lowerInput.includes(key)) {
-            translatedText = value;
-            break;
-          }
-        }
-      }
-
-      if (!translatedText) {
-        alert('Translation not found. Common phrases:\n- take after food\n- take before food\n- take with food\n- take on empty stomach\n- take at bedtime\n\nOr you can manually type in Marathi.');
-        setIsTranslating(false);
-        return;
-      }
-
-      onChange(idx, { ...med, specialNote: translatedText });
-      setEnglishNote('');
-      alert(`Translated: ${translatedText}`);
-      
-    } catch (error) {
-      console.error('Translation error:', error);
-      alert('Translation failed. Please try common phrases like "take after food", "take before food", etc.');
-    } finally {
-      setIsTranslating(false);
-    }
-  }
 
   return (
     <div style={{ 
@@ -940,64 +881,38 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
       </div>
       
       <div style={{ 
-        marginTop: '10px', 
-        padding: '10px', 
-        backgroundColor: '#fff', 
-        borderRadius: '4px',
-        border: '1px solid #e0e0e0'
-      }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
-          Special Note:
-        </label>
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-          <input
-            style={{ 
-              flex: '1', 
-              padding: '8px', 
-              borderRadius: '4px', 
-              border: '1px solid #ccc',
-              fontSize: '14px'
-            }}
-            placeholder="Type in English (e.g., take after food)"
-            value={englishNote}
-            onChange={e => setEnglishNote(e.target.value)}
-          />
-          <button 
-            style={{
-              padding: '8px 15px',
-              backgroundColor: isTranslating ? '#95a5a6' : '#3498db',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: isTranslating ? 'not-allowed' : 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-            onClick={translateToMarathi}
-            disabled={isTranslating}
-          >
-            {isTranslating ? '⏳ Translating...' : '🔄 Translate'}
-          </button>
-        </div>
-        {med.specialNote && (
-          <div style={{ 
-            padding: '10px', 
-            backgroundColor: '#e8f5e9', 
-            borderRadius: '4px',
-            border: '1px solid #a5d6a7',
-            marginBottom: '10px'
-          }}>
-            <strong style={{ color: '#2e7d32' }}>Marathi:</strong> 
-            <span style={{ marginLeft: '8px', fontSize: '16px' }}>{med.specialNote}</span>
-          </div>
-        )}
-        <div style={{ 
-          fontSize: '12px', 
-          color: '#666',
-          fontStyle: 'italic'
-        }}>
-          Common phrases: take after food, take before food, take with food, take on empty stomach, take at bedtime
-        </div>
-      </div>
+  marginTop: '10px', 
+  padding: '10px', 
+  backgroundColor: '#fff', 
+  borderRadius: '4px',
+  border: '1px solid #e0e0e0'
+}}>
+  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
+    Special Note:
+  </label>
+  <input
+    style={{ 
+      width: '100%', 
+      padding: '8px', 
+      borderRadius: '4px', 
+      border: '1px solid #ccc',
+      fontSize: '14px'
+    }}
+    placeholder="Edit special note if needed"
+    value={med.specialNote || ''}
+    onChange={e => onChange(idx, { ...med, specialNote: e.target.value })}
+  />
+  {med.specialNote && (
+    <div style={{ 
+      marginTop: '8px',
+      fontSize: '12px', 
+      color: '#27ae60',
+      fontStyle: 'italic'
+    }}>
+      
+    </div>
+  )}
+</div>
     </div>
   );
 }
