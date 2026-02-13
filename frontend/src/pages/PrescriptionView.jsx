@@ -1129,15 +1129,19 @@ try {
               margin-bottom: 10px;
               padding-bottom: 8px;
               border-bottom: 2px solid #000;
+              margin-left: 0;
+              padding-left: 0;
             }
             .logo-box {
               width: 250px;
               height: 250px;
-              background-color: transparent;  /* <-- Now transparent */
+              background-color: transparent;
               display: flex;
               align-items: center;
-              justify-content: center;
-              margin-right: 20px;
+              justify-content: flex-start;  /* Changed from center */
+              margin-right: 1rem;
+              margin-left: -3rem;
+              padding-left: 0;
               flex-shrink: 0;
             }
             .doctor-info {
