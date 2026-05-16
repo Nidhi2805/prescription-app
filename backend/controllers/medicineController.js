@@ -4,7 +4,12 @@ const Medicine = require('../models/Medicine');
 async function addMedicine(req, res) {
   try {
     const { name, defaultTimes, defaultDays, description } = req.body;
-    const med = new Medicine({ name, defaultTimes, defaultDays, description });
+    const med = new Medicine({
+      name,
+      defaultTimes,
+      defaultDays: defaultDays ?? 10,
+      description
+    });
     await med.save();
     res.status(201).json(med);
   } catch (err) {

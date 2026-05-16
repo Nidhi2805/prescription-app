@@ -10,7 +10,6 @@ app.use(express.json());
 
 connectDB(process.env.MONGO_URI);
 
-app.use('/api/patients', require('./routes/patients'));
 app.use('/api/medicines', require('./routes/medicines'));
 app.use('/api/patients', patientRoutes);
 

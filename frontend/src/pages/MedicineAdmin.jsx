@@ -112,6 +112,7 @@ const MedicineDBService = {
     const medicines = this.getAllMedicines();
     const newMedicine = {
       ...medicine,
+      defaultDays: medicine.defaultDays ?? 10,
       id: `MED${String(medicines.length + 1).padStart(3, '0')}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -192,12 +193,22 @@ function MedicineAdmin({ onClose }) {
   const [editingMedicine, setEditingMedicine] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
+
+  const emptyRegimen = () => ({
+    times: '1-0-1',
+    days: 10,
+    tradeName: '',
+    strength: '',
+    specialNote: ''
+  });
+
   const [formData, setFormData] = useState({
     molecule: '',
     tradeNames: [],
     defaultTimes: '1-0-1',
     defaultTradename: '',
-    defaultDays: 5,
+    defaultDays: 10,
+    defaultRegimens: [emptyRegimen()],
     category: '',
     indication: '',
     dosageForm: 'Tablet',
@@ -255,14 +266,91 @@ function MedicineAdmin({ onClose }) {
     });
   }
 
+  const translationDictionary = {
+    'take after food': 'जेवणानंतर घ्या',
+    'translate food': 'जेवणानंतर घ्या',
+    'take after meal': 'जेवणानंतर घ्या',
+    'after meal': 'जेवणानंतर',
+    'take before food': 'जेवणाआधी घ्या',
+    'take before meal': 'जेवणाआधी घ्या',
+    'before meal': 'जेवणाआधी',
+    'take with food': 'जेवणासोबत घ्या',
+    'take with meals': 'जेवणासोबत घ्या',
+    'with meals': 'जेवणासोबत',
+    'take on empty stomach': 'रिकाम्या पोटी घ्या',
+    'take at bedtime': 'झोपण्याच्या वेळी घ्या',
+    'take in morning': 'सकाळी घ्या',
+    'take at night': 'रात्री घ्या',
+    'take with water': 'पाण्यासोबत घ्या',
+    'take with milk': 'दूधासोबत घ्या',
+    'do not chew': 'चघळू नका',
+    'dissolve in water': 'पाण्यात विरघळवा',
+    'after food': 'जेवणानंतर',
+    'before food': 'जेवणाआधी',
+    'with food': 'जेवणासोबत',
+    'empty stomach': 'रिकाम्या पोटी',
+    'morning': 'सकाळी',
+    'night': 'रात्री',
+    'bedtime': 'झोपण्याच्या वेळी'
+  };
+
+  function translateToMarathi(text) {
+    if (!text || typeof text !== 'string') return null;
+    const normalized = text.toLowerCase().trim();
+    if (translationDictionary[normalized]) return translationDictionary[normalized];
+
+    for (const [key, value] of Object.entries(translationDictionary)) {
+      if (normalized.includes(key)) {
+        return value;
+      }
+    }
+
+    return null;
+  }
+
+  function handleRegimenChange(index, field, value) {
+    const updatedRegimens = formData.defaultRegimens.map((regimen, i) =>
+      i === index ? { ...regimen, [field]: field === 'specialNote' ? (translateToMarathi(value) || value) : value } : regimen
+    );
+    setFormData({ ...formData, defaultRegimens: updatedRegimens });
+  }
+
+  function addRegimen() {
+    setFormData({
+      ...formData,
+      defaultRegimens: [...formData.defaultRegimens, emptyRegimen()]
+    });
+  }
+
+  function removeRegimen(index) {
+    const updatedRegimens = formData.defaultRegimens.filter((_, i) => i !== index);
+    setFormData({ ...formData, defaultRegimens: updatedRegimens.length ? updatedRegimens : [emptyRegimen()] });
+  }
+
   function handleSaveMedicine() {
     if (!formData.molecule || formData.tradeNames.length === 0) {
       alert('❌ Please fill molecule name and at least one trade name');
       return;
     }
 
+    const regimens = formData.defaultRegimens.filter(r => r.times && r.days > 0);
+    if (regimens.length === 0) {
+      alert('❌ Please add at least one default regimen with times and days');
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      defaultRegimens: regimens,
+      defaultTimes: formData.defaultTimes || regimens[0].times,
+      defaultDays: formData.defaultDays || regimens[0].days,
+      defaultTradename: formData.defaultTradename || regimens[0].tradeName,
+      defaultStrength: formData.defaultStrength || regimens[0].strength,
+      specialNote: formData.specialNote || regimens[0].specialNote
+    };
+
     if (editingMedicine) {
-      const success = MedicineDBService.updateMedicine(editingMedicine.id, formData);
+      const success = MedicineDBService.updateMedicine(editingMedicine.id, payload);
       if (success) {
         alert('✅ Medicine updated successfully!');
         resetForm();
@@ -270,7 +358,7 @@ function MedicineAdmin({ onClose }) {
         alert('❌ Failed to update medicine');
       }
     } else {
-      const newMedicine = MedicineDBService.addMedicine(formData);
+      const newMedicine = MedicineDBService.addMedicine(payload);
       if (newMedicine) {
         alert(`✅ Medicine added successfully! ID: ${newMedicine.id}`);
         resetForm();
@@ -283,12 +371,23 @@ function MedicineAdmin({ onClose }) {
 
   function handleEdit(medicine) {
     setEditingMedicine(medicine);
+    const fallbackRegimen = {
+      times: medicine.defaultTimes || '1-0-1',
+      days: medicine.defaultDays || 10,
+      tradeName: medicine.defaultTradename || '',
+      strength: medicine.defaultStrength || '',
+      specialNote: medicine.specialNote || ''
+    };
+
     setFormData({
       molecule: medicine.molecule,
       tradeNames: [...medicine.tradeNames],
       defaultTradename: medicine.defaultTradename || '',
       defaultTimes: medicine.defaultTimes,
       defaultDays: medicine.defaultDays,
+      defaultRegimens: (medicine.defaultRegimens && medicine.defaultRegimens.length > 0)
+        ? medicine.defaultRegimens
+        : [fallbackRegimen],
       category: medicine.category,
       indication: medicine.indication,
       dosageForm: medicine.dosageForm || 'Tablet',
@@ -317,7 +416,8 @@ function MedicineAdmin({ onClose }) {
       tradeNames: [],
       defaultTradename: '',
       defaultTimes: '1-0-1',
-      defaultDays: 5,
+      defaultDays: 10,
+      defaultRegimens: [emptyRegimen()],
       category: '',
       indication: '',
       dosageForm: 'Tablet',
@@ -552,38 +652,125 @@ function MedicineAdmin({ onClose }) {
                   />
                 </div>
 
-                <div>
-                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
-                    Default Times (M-A-N)
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '10px' }}>
+                    Default Regimens
                   </label>
-                  <input
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      borderRadius: '6px',
-                      border: '2px solid #ddd'
-                    }}
-                    value={formData.defaultTimes}
-                    onChange={e => setFormData({ ...formData, defaultTimes: e.target.value })}
-                    placeholder="1-0-1"
-                  />
-                </div>
+                  {formData.defaultRegimens.map((regimen, index) => (
+                    <div key={index} style={{
+                      border: '1px solid #ddd',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      marginBottom: '12px',
+                      backgroundColor: '#fbfcfd'
+                    }}>
+                      <div style={{ display: 'grid', gap: '10px', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
+                        <div>
+                          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+                            Times (M-A-N)
+                          </label>
+                          <input
+                            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '2px solid #ddd' }}
+                            value={regimen.times}
+                            onChange={e => handleRegimenChange(index, 'times', e.target.value)}
+                            placeholder="1-0-1"
+                          />
+                        </div>
 
-                <div>
-                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
-                    Default Days
-                  </label>
-                  <input
-                    type="number"
+                        <div>
+                          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+                            Days
+                          </label>
+                          <input
+                            type="number"
+                            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '2px solid #ddd' }}
+                            value={regimen.days}
+                            min="1"
+                            onChange={e => handleRegimenChange(index, 'days', Number(e.target.value))}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+                            Trade Name
+                          </label>
+                          <select
+                            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '2px solid #ddd' }}
+                            value={regimen.tradeName}
+                            onChange={e => handleRegimenChange(index, 'tradeName', e.target.value)}
+                          >
+                            <option value="">-- Select trade name --</option>
+                            {formData.tradeNames.map((name, i) => (
+                              <option key={i} value={name}>{name}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+                            Strength
+                          </label>
+                          <select
+                            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '2px solid #ddd' }}
+                            value={regimen.strength}
+                            onChange={e => handleRegimenChange(index, 'strength', e.target.value)}
+                          >
+                            <option value="">-- Select strength --</option>
+                            {formData.strengths.map((strength, i) => (
+                              <option key={i} value={strength}>{strength}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div style={{ marginTop: '12px' }}>
+                        <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+                          Special Note
+                        </label>
+                        <input
+                          style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '2px solid #ddd' }}
+                          value={regimen.specialNote}
+                          onChange={e => {
+                            const value = e.target.value;
+                            const translation = translateToMarathi(value);
+                            handleRegimenChange(index, 'specialNote', translation || value);
+                          }}
+                          placeholder="Type note for this regimen"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => removeRegimen(index)}
+                        style={{
+                          marginTop: '10px',
+                          padding: '8px 16px',
+                          backgroundColor: '#e74c3c',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Remove Regimen
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addRegimen}
                     style={{
-                      width: '100%',
-                      padding: '10px',
+                      padding: '12px 18px',
+                      backgroundColor: '#27ae60',
+                      color: 'white',
+                      border: 'none',
                       borderRadius: '6px',
-                      border: '2px solid #ddd'
+                      cursor: 'pointer',
+                      fontWeight: 'bold'
                     }}
-                    value={formData.defaultDays}
-                    onChange={e => setFormData({ ...formData, defaultDays: Number(e.target.value) })}
-                  />
+                  >
+                    + Add Default Regimen
+                  </button>
                 </div>
 
                 <div>
@@ -794,49 +981,25 @@ function MedicineAdmin({ onClose }) {
         border: '2px solid #ddd'
       }}
       value={formData.specialNote}
-      onChange={e => setFormData({ ...formData, specialNote: e.target.value })}
+      onChange={e => {
+        const value = e.target.value;
+        const translation = translateToMarathi(value);
+        setFormData({
+          ...formData,
+          specialNote: translation || value
+        });
+      }}
       placeholder="Type in English (e.g., take after food) or Marathi directly"
     />
-    <button
+    {/* <button
       type="button"
       onClick={() => {
         if (!formData.specialNote || !formData.specialNote.trim()) {
           alert('⚠️ Please enter some text first in the Special Note field');
           return;
         }
-        
-        const translations = {
-          'take after food': 'जेवणानंतर घ्या',
-          'take before food': 'जेवणाआधी घ्या',
-          'take with food': 'जेवणासोबत घ्या',
-          'take on empty stomach': 'रिकाम्या पोटी घ्या',
-          'take at bedtime': 'झोपण्याच्या वेळी घ्या',
-          'take in morning': 'सकाळी घ्या',
-          'take at night': 'रात्री घ्या',
-          'take with water': 'पाण्यासोबत घ्या',
-          'take with milk': 'दूधासोबत घ्या',
-          'do not chew': 'चघळू नका',
-          'dissolve in water': 'पाण्यात विरघळवा',
-          'after food': 'जेवणानंतर',
-          'before food': 'जेवणाआधी',
-          'with food': 'जेवणासोबत',
-          'empty stomach': 'रिकाम्या पोटी',
-          'morning': 'सकाळी',
-          'night': 'रात्री',
-          'bedtime': 'झोपण्याच्या वेळी'
-        };
 
-        const lowerInput = formData.specialNote.toLowerCase().trim();
-        let translatedText = translations[lowerInput];
-
-        if (!translatedText) {
-          for (const [key, value] of Object.entries(translations)) {
-            if (lowerInput.includes(key)) {
-              translatedText = value;
-              break;
-            }
-          }
-        }
+        const translatedText = translateToMarathi(formData.specialNote);
 
         if (translatedText) {
           setFormData({ ...formData, specialNote: translatedText });
@@ -857,7 +1020,7 @@ function MedicineAdmin({ onClose }) {
       }}
     >
       🔄 Translate
-    </button>
+    </button> */}
   </div>
   <div style={{ 
     fontSize: '11px', 
@@ -985,9 +1148,25 @@ function MedicineAdmin({ onClose }) {
                         <div style={{ fontSize: '13px', color: '#666', marginBottom: '5px' }}>
                           <strong>Trade Names:</strong> {med.tradeNames.join(', ')}
                         </div>
-                        <div style={{ fontSize: '13px', color: '#666', marginBottom: '5px' }}>
-                          <strong>Default Dosage:</strong> {med.defaultTimes} for {med.defaultDays} days
-                        </div>
+                        {med.defaultRegimens && med.defaultRegimens.length > 0 ? (
+                          <div style={{ fontSize: '13px', color: '#666', marginBottom: '5px' }}>
+                            <strong>Default Regimens:</strong>
+                            <div style={{ marginTop: '5px' }}>
+                              {med.defaultRegimens.map((regimen, i) => (
+                                <div key={i} style={{ marginBottom: '4px' }}>
+                                  {regimen.times} for {regimen.days} days
+                                  {regimen.tradeName ? ` • ${regimen.tradeName}` : ''}
+                                  {regimen.strength ? ` • ${regimen.strength}` : ''}
+                                  {regimen.specialNote ? ` • ${regimen.specialNote}` : ''}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '13px', color: '#666', marginBottom: '5px' }}>
+                            <strong>Default Dosage:</strong> {med.defaultTimes} for {med.defaultDays} days
+                          </div>
+                        )}
                         <div style={{ fontSize: '13px', color: '#666' }}>
                           <strong>Indication:</strong> {med.indication}
                         </div>

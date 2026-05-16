@@ -1,0 +1,17 @@
+DEPLOYMENT LINKS
+================
+
+Project ZIP:
+https://drive.google.com/file/d/...
+
+Node.js:
+https://nodejs.org/dist/v20.11.0/node-v20.11.0-x64.msi
+
+Git (optional):
+https://git-scm.com/download/win
+
+MongoDB (if needed):
+https://www.mongodb.com/try/download/community
+
+MongoDB Atlas (cloud):
+https://www.mongodb.com/cloud/atlas~

@@ -46,7 +46,7 @@ const PatientSchema = new mongoose.Schema({
 
   dob: {
     type: Date,
-    required: true
+    default: null
   },
 
   address: {

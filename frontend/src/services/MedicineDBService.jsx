@@ -48,8 +48,23 @@ export const MedicineDBService = {
     
     addMedicine(medicine) {
       const medicines = this.getAllMedicines();
+      const regimens = medicine.defaultRegimens && medicine.defaultRegimens.length > 0
+        ? medicine.defaultRegimens
+        : [{
+            times: medicine.defaultTimes || '1-0-1',
+            days: medicine.defaultDays || 10,
+            tradeName: medicine.defaultTradename || '',
+            strength: medicine.defaultStrength || '',
+            specialNote: medicine.specialNote || ''
+          }];
       const newMedicine = {
         ...medicine,
+        defaultRegimens: regimens,
+        defaultTimes: medicine.defaultTimes || regimens[0].times,
+        defaultDays: medicine.defaultDays || regimens[0].days,
+        defaultTradename: medicine.defaultTradename || regimens[0].tradeName,
+        defaultStrength: medicine.defaultStrength || regimens[0].strength,
+        specialNote: medicine.specialNote || regimens[0].specialNote,
         id: `MED${String(medicines.length + 1).padStart(3, '0')}`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()

@@ -13,7 +13,7 @@ export default function ReceptionForm() {
     age: '',
     contact: '',
     address: '',
-    assignedDoctor: '',
+    assignedDoctor: 'Dr. Karva',
     allergies: '',
     weight: '',
     sex: ''              // ✅ NEW FIELD
@@ -21,8 +21,36 @@ export default function ReceptionForm() {
 
   const [status, setStatus] = useState(null);
 
+  function calculateAge(dobValue) {
+    if (!dobValue) return '';
+    const birthDate = new Date(dobValue);
+    if (Number.isNaN(birthDate.getTime())) return '';
+
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    const dayDiff = today.getDate() - birthDate.getDate();
+
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      age -= 1;
+    }
+
+    return age >= 0 ? String(age) : '';
+  }
+
   function onChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === 'dob') {
+      setForm({
+        ...form,
+        dob: value,
+        age: value ? calculateAge(value) : ''
+      });
+      return;
+    }
+
+    setForm({ ...form, [name]: value });
   }
 
   async function onSubmit(e) {
@@ -36,7 +64,7 @@ export default function ReceptionForm() {
     try {
       const resp = await createPatient({
         name: fullName,
-        dob: form.dob,
+        dob: form.dob || null,
         age: Number(form.age || 0),
         contact: form.contact,
         address: form.address,
@@ -56,7 +84,7 @@ export default function ReceptionForm() {
         age: '',
         contact: '',
         address: '',
-        assignedDoctor: '',
+        assignedDoctor: 'Dr. Karva',
         allergies: '',
         weight: '',
         sex: ''
@@ -64,7 +92,8 @@ export default function ReceptionForm() {
 
     } catch (err) {
       console.error(err);
-      setStatus('Error saving');
+      const errorMessage = err.response?.data?.error || err.message || 'Error saving';
+      setStatus(errorMessage);
     }
   }
 
@@ -270,7 +299,7 @@ export default function ReceptionForm() {
 
           {/* Date of Birth */}
           <input name="dob" type="date"
-            value={form.dob} onChange={onChange} required />
+            value={form.dob} onChange={onChange}  />
 
           {/* Age, Weight, Sex */}
           <div style={{ display: 'flex', gap: '10px' }}>

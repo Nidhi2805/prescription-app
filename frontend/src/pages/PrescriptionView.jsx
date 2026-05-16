@@ -722,26 +722,56 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
   const [tradeNames, setTradeNames] = useState([]);
   const [selectedMolecule, setSelectedMolecule] = useState(null);
   const [strengths, setStrengths] = useState([]);
+  const [regimens, setRegimens] = useState([]);
+  const [selectedRegimenIndex, setSelectedRegimenIndex] = useState(-1);
+
+  function getInitialRegimen(moleculeData) {
+    if (moleculeData.defaultRegimens && moleculeData.defaultRegimens.length > 0) {
+      return moleculeData.defaultRegimens[0];
+    }
+    return {
+      times: moleculeData.defaultTimes || '1-0-0',
+      days: moleculeData.defaultDays || 1,
+      tradeName: moleculeData.defaultTradename || (moleculeData.tradeNames && moleculeData.tradeNames.length > 0 ? moleculeData.tradeNames[0] : ''),
+      strength: moleculeData.defaultStrength || (moleculeData.strengths && moleculeData.strengths.length > 0 ? moleculeData.strengths[0] : ''),
+      specialNote: moleculeData.specialNote || ''
+    };
+  }
 
   async function handleMoleculeSelect(moleculeData) {
     setSelectedMolecule(moleculeData);
     setTradeNames(moleculeData.tradeNames || []);
     setStrengths(moleculeData.strengths || []);
-    
+    const initialRegimen = getInitialRegimen(moleculeData);
+    const regimenList = moleculeData.defaultRegimens && moleculeData.defaultRegimens.length > 0
+      ? moleculeData.defaultRegimens
+      : [];
+
+    setRegimens(regimenList);
+    setSelectedRegimenIndex(regimenList.length > 0 ? 0 : -1);
+
     onChange(idx, {
       ...med,
       molecule: moleculeData.molecule,
-      name: moleculeData.defaultTradeName || 
-            (moleculeData.tradeNames && moleculeData.tradeNames.length > 0 
-              ? moleculeData.tradeNames[0] 
-              : ""),
-      strength: moleculeData.defaultStrength || 
-                (moleculeData.strengths && moleculeData.strengths.length > 0 
-                  ? moleculeData.strengths[0] 
-                  : ""),
-      times: moleculeData.defaultTimes || "1-0-0",
-      days: moleculeData.defaultDays || 1,
-      specialNote: moleculeData.specialNote || ""
+      name: initialRegimen.tradeName || moleculeData.defaultTradeName || (moleculeData.tradeNames && moleculeData.tradeNames.length > 0 ? moleculeData.tradeNames[0] : ''),
+      strength: initialRegimen.strength || moleculeData.defaultStrength || (moleculeData.strengths && moleculeData.strengths.length > 0 ? moleculeData.strengths[0] : ''),
+      times: initialRegimen.times,
+      days: initialRegimen.days,
+      specialNote: initialRegimen.specialNote || moleculeData.specialNote || ''
+    });
+  }
+
+  function handleRegimenSelect(index) {
+    const regimen = regimens[index];
+    if (!regimen) return;
+    setSelectedRegimenIndex(index);
+    onChange(idx, {
+      ...med,
+      times: regimen.times || med.times,
+      days: regimen.days || med.days,
+      name: regimen.tradeName || med.name,
+      strength: regimen.strength || med.strength,
+      specialNote: regimen.specialNote || med.specialNote
     });
   }
 
@@ -792,6 +822,24 @@ function MedicineRow({ idx, med, onChange, onRemove }) {
         </div>
       )}
 
+      {regimens.length > 0 && (
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>
+            Select Regimen
+          </label>
+          <select
+            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }}
+            value={selectedRegimenIndex}
+            onChange={e => handleRegimenSelect(Number(e.target.value))}
+          >
+            {regimens.map((regimen, i) => (
+              <option key={i} value={i}>
+                {regimen.times} • {regimen.days} days{regimen.tradeName ? ` • ${regimen.tradeName}` : ''}{regimen.strength ? ` • ${regimen.strength}` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
 {tradeNames.length > 0 && (
   <div style={{ marginBottom: '15px' }}>

@@ -36,19 +36,47 @@ async function createPatient(req, res) {
 
     const patientId = await getNextPatientId();
 
-    const patient = new Patient({
+    function parseDob(value) {
+      if (!value) return null;
+      const isoMatch = /^\d{4}-\d{2}-\d{2}$/;
+      const dmyMatch = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/;
+
+      if (isoMatch.test(value)) {
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? null : date;
+      }
+
+      const dmy = value.match(dmyMatch);
+      if (dmy) {
+        const [, day, month, year] = dmy;
+        const normalized = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        const date = new Date(normalized);
+        return Number.isNaN(date.getTime()) ? null : date;
+      }
+
+      const fallback = new Date(value);
+      return Number.isNaN(fallback.getTime()) ? null : fallback;
+    }
+
+    const patientData = {
       patientId,
       name,
-      dob,
-      age,
       sex,
-      weight,
       contact,
       address,
       assignedDoctor,
       allergies: allergies || 'None',
       prescriptions: []
-    });
+    };
+
+    if (dob) {
+      const parsedDob = parseDob(dob);
+      if (parsedDob) patientData.dob = parsedDob;
+    }
+    if (age !== undefined && !Number.isNaN(age)) patientData.age = age;
+    if (weight) patientData.weight = weight;
+
+    const patient = new Patient(patientData);
 
     await patient.save();
     res.status(201).json(patient);

@@ -27,24 +27,24 @@ WshShell.Run backendCmd, 0, False
 ' Wait for backend to start
 WScript.Sleep 3000
 
-' Start Frontend (hidden, but will open browser)
+' Start Frontend with Vite (hidden, but will open browser)
 frontendDir = scriptDir & "\frontend"
-frontendCmd = "cmd /c cd /d """ & frontendDir & """ && npm start > """ & logsDir & "\frontend.log"" 2>&1"
+frontendCmd = "cmd /c cd /d """ & frontendDir & """ && npm run dev > """ & logsDir & "\frontend.log"" 2>&1"
 WshShell.Run frontendCmd, 0, False
 
-' Wait for React to compile and browser to open
+' Wait for Vite to compile and browser to open
 WScript.Sleep 15000
 
 ' Show success message
 MsgBox "Medical Prescription Application is starting!" & vbCrLf & vbCrLf & _
        "Browser will open automatically in a few seconds." & vbCrLf & vbCrLf & _
-       "If browser doesn't open, go to: http://localhost:3000" & vbCrLf & vbCrLf & _
+       "If browser doesn't open, go to: http://localhost:5173" & vbCrLf & vbCrLf & _
        "To stop the application, use 'Stop Medical App' icon.", _
        vbInformation, "Medical App Starting"
 
 ' Optional: Ensure browser opens
 WScript.Sleep 5000
-WshShell.Run "http://localhost:3000", 1, False
+WshShell.Run "http://localhost:5173", 1, False
 
 Set WshShell = Nothing
 Set fso = Nothing
