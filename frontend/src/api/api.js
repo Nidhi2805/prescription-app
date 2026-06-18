@@ -1,8 +1,6 @@
 import axios from 'axios';
 
-// CHANGE this line at the top
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
+const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // --- Named API functions ---
 export const createPatient = data =>

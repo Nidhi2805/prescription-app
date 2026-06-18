@@ -13,7 +13,7 @@ export default function ReceptionForm() {
     age: '',
     contact: '',
     address: '',
-    assignedDoctor: 'Dr. Karva',
+    assignedDoctor: 'Dr. Anand Rajgopal Karva',
     allergies: '',
     weight: '',
     sex: ''              // ✅ NEW FIELD
@@ -84,7 +84,7 @@ export default function ReceptionForm() {
         age: '',
         contact: '',
         address: '',
-        assignedDoctor: 'Dr. Karva',
+        assignedDoctor: 'Dr. Anand Rajgopal Karva',
         allergies: '',
         weight: '',
         sex: ''

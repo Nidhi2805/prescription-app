@@ -1179,6 +1179,7 @@ try {
               border-bottom: 2px solid #000;
               margin-left: 0;
               padding-left: 0;
+
             }
             .logo-box {
               width: 250px;
@@ -1191,6 +1192,7 @@ try {
               margin-left: -3rem;
               padding-left: 0;
               flex-shrink: 0;
+              margin-top: -1.5rem;
             }
             .doctor-info {
               flex: 1;
@@ -1211,9 +1213,21 @@ try {
               line-height: 1.6;
               margin: 5px 0;
             }
+            .rx-row {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin: 5px 0;
+            }
+
+
+            .rx-date {
+              font-size: 14px;
+              font-weight: bold;
+            }
             .rx-symbol {
               color: #8b0000;
-              font-size: 48px;
+              font-size: 28px;
               font-weight: bold;
               margin: 10px 0 5px 0;
             }
@@ -1227,7 +1241,12 @@ try {
               margin: 8px 0;
               padding-bottom: 5px;
               border-bottom: 1px solid #333;
+              font-size: 1.2rem;
             }
+              .patient-details {
+                justify-content: flex-start;
+                gap: 180px;      /* adjust 20px, 30px, 40px as needed */
+              }
             table { 
               width: 100%; 
               border-collapse: collapse; 
@@ -1281,10 +1300,10 @@ try {
         <body>
           <div class="header">
           <div class="logo-box">
-          <img src="${logoBase64}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'">
+          <img src="${logoBase64}" alt="Logo" style="width: 100%; height: 80%; object-fit: contain;" onerror="this.style.display='none'">
         </div>
             <div class="doctor-info">
-              <div class="doctor-name">Dr. ${doctorName}</div>
+              <div class="doctor-name">${doctorName}</div>
               <div class="qualifications">
                 M.S.(Ortho.), A.F.I.H.(Bom.), M.R.C.S. (Edin.), MSc.(UK), MCh(UK)
               </div>
@@ -1293,8 +1312,8 @@ try {
               </div>
               <div class="consulting-info">
                 <strong>Consulting:</strong> Nidhi Joint Care Centre,<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Anubandh" 158, Rly. lines,<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Opp. Pankha Bawadi, Solapur - 413 001.<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Anubandh" 158, Rly. lines, Opp. Pankha Bawadi,<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Solapur - 413 001.<br>
                 <strong>Time:</strong> 11 am to 1 pm, 5 pm to 7 pm
               </div>
               <div class="consulting-info">
@@ -1302,18 +1321,18 @@ try {
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;South Sadar Bazar, Solapur - 413 001.
               </div>
             </div>
-            <div style="text-align: right; font-size: 12px;">
-              Date: ${currentDate}
-            </div>
           </div>
 
-          <div class="rx-symbol">℞</div>
+          <div class="rx-row">
+            <div class="rx-symbol">℞</div>
+            <div class="rx-date">Date: ${currentDate}</div>
+          </div>
 
           <div class="patient-info">
             <div class="patient-info-row">
               <span><strong>Patient's Full Name:</strong> ${patient.name}</span>
             </div>
-            <div class="patient-info-row">
+            <div class="patient-info-row patient-details">
               <span><strong>Sex:</strong> ${patient.sex || '-'}</span>
               <span><strong>Age:</strong> ${patient.age || '-'}</span>
               <span><strong>Weight:</strong> ${patient.weight || '-'}</span>
@@ -1352,7 +1371,12 @@ try {
                   const times = (m.times || '0-0-0').split('-');
                   return `
                     <tr>
-                      <td class="medicine-name">${m.name}${m.strength ? ' - ' + m.strength : ''}${m.specialNote ? '<br><small style="color: #666;">(' + m.specialNote + ')</small>' : ''}</td>
+                      <td class="medicine-name">
+                        <strong>${m.name}</strong>
+                        ${m.molecule ? `<small style="color:#444;">(${m.molecule})</small>` : ''}
+                        ${m.strength ? ` - ${m.strength}` : ''}
+                        ${m.specialNote ? `<br><small style="color:#666;">(${m.specialNote})</small>` : ''}
+                      </td>
                       <td>${times[0] || '0'}</td>
                       <td>${times[1] || '0'}</td>
                       <td>${times[2] || '0'}</td>
@@ -1390,11 +1414,11 @@ try {
               <div style="margin-top: 10px;">Date of Dispensing: ____/____/20____</div>
             </div>
             <div class="doctor-signature">
-              <div class="signature-name">Dr. ${doctorName}</div>
-              <div style="font-size: 11px; margin-top: 5px;">
+              <div class="signature-name">${doctorName}</div>
+              <div style="font-size: 10px; margin-top: 5px;">
                 M.S.(Ortho.), A.F.I.H.(Bom.), M.R.C.S. (Edin.), MSc.(UK), MCh(UK)
               </div>
-              <div style="font-size: 11px;">
+              <div style="font-size: 10px;">
                 Primary & Revision Joint Replacement & Arthroscopy Surgeon
               </div>
               <div class="reg-no">Reg. No. 84688</div>
