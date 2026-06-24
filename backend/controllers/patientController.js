@@ -5,12 +5,21 @@ const Counter = require('../models/Counter');
    🔢 AUTO-INCREMENT PATIENT ID (NUMERIC)
 -------------------------------------------------- */
 async function getNextPatientId() {
+  // Ensure counter exists and starts from 0
+  await Counter.findOneAndUpdate(
+    { name: 'patientId' },
+    { $setOnInsert: { seq: 0 } }, // Initialize to 0 on first insert
+    { upsert: true, new: false }
+  );
+
+  // Now increment and get
   const counter = await Counter.findOneAndUpdate(
     { name: 'patientId' },
     { $inc: { seq: 1 } },
-    { new: true, upsert: true }
+    { new: true }
   );
-  return counter.seq;
+  
+  return counter.seq; // Will be 1, 2, 3, ...
 }
 
 /* --------------------------------------------------
