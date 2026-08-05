@@ -1143,7 +1143,7 @@ try {
 }
 
 try {
-  const logoResponse = await fetch('/Logo.png');
+  const logoResponse = await fetch('/Logo1.png');
   const logoBlob = await logoResponse.blob();
   logoBase64 = await new Promise((resolve) => {
     const reader = new FileReader();
